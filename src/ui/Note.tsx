@@ -2,6 +2,7 @@ import { FC, useEffect, useReducer, useRef, useState } from "react";
 
 import { assertNever } from "../util/assertNever";
 import { clamp } from "../util/clamp";
+import { RenderMarkdown } from "../lib/markdown/RenderMarkdown";
 
 export type NoteProps = {
 	//
@@ -60,7 +61,7 @@ export const Note: FC<NoteProps> = ({}) => {
 					{paragraphs.items.map((paragraph, index) => (
 						<li key={index} onClick={() => dispatchParagraphs({ action: "focus", index })}>
 							{paragraphs.focusItemIndex === index ? (
-								// editable
+								// editable, raw text
 								<input
 									ref={activeParagraphRef}
 									value={paragraph.content}
@@ -70,7 +71,7 @@ export const Note: FC<NoteProps> = ({}) => {
 								/>
 							) : (
 								// view-only, rendered markdown
-								paragraph.content
+								<RenderMarkdown content={paragraph.content} />
 							)}
 						</li>
 					))}

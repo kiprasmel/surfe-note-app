@@ -1,0 +1,1 @@
+- [ ] eslint config new publish + install here once issues worked out (take from "rules" overrides)

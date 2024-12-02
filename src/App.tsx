@@ -2,7 +2,7 @@ import { css } from "emotion";
 
 import "./reset.css";
 
-import { Note } from "./Note";
+import { Note } from "./ui/Note";
 
 function App() {
 	return (

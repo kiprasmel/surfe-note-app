@@ -1,11 +1,19 @@
-import React from "react";
+import { css } from "emotion";
+
+import "./reset.css";
+
+import { Note } from "./Note";
 
 function App() {
 	return (
-		<div>
-			<h1>Hello World</h1>
+		<div className={styles.app}>
+			<Note />
 		</div>
 	);
 }
+
+const styles = {
+	app: css``,
+};
 
 export default App;

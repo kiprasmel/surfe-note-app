@@ -1,3 +1,5 @@
 - [ ] eslint config new publish + install here once issues worked out (take from "rules" overrides)
 - [ ] sanitize parsed markdown before rendering
 - [ ] validate if markdown is valid, e.g. beginning bold without ending it
+- [ ] do not take away focus from note's title, if initially clicking on it
+  - [ ] or, pitch this as a feature not a bug, and have a way to auto-generate title once user starts typing content

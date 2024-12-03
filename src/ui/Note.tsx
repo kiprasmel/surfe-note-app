@@ -1,17 +1,29 @@
 import { FC, useEffect, useReducer, useRef, useState } from "react";
 
+import { css } from "emotion";
 import { assertNever } from "../util/assertNever";
 import { clamp } from "../util/clamp";
 import { RenderMarkdown } from "../lib/markdown/RenderMarkdown";
 
-export type NoteProps = {
-	//
+export type NoteData = {
+	id: number;
+	title: string;
+	paragraphs: string[];
 };
 
-export const Note: FC<NoteProps> = ({}) => {
-	const [title, setTitle] = useState("");
+export type NoteProps = {
+	data: NoteData;
+	active: boolean;
+};
 
-	const [paragraphs, dispatchParagraphs] = useReducer(paragraphsReducer, null, getDefaultParagraphsState);
+export const Note: FC<NoteProps> = ({ data, active = false }) => {
+	const [title, setTitle] = useState(data.title || "");
+
+	const [paragraphs, dispatchParagraphs] = useReducer(
+		paragraphsReducer, //
+		null,
+		() => getDefaultParagraphsState(data.paragraphs)
+	);
 	const activeParagraphRef = useRef<HTMLInputElement>(null);
 
 	function handleKeyPress(e: React.KeyboardEvent): void {
@@ -47,17 +59,24 @@ export const Note: FC<NoteProps> = ({}) => {
 	 * it's not really possible to do.
 	 */
 	useEffect(() => {
-		activeParagraphRef.current?.focus();
-	}, [paragraphs.focusItemIndex]);
+		if (active) {
+			activeParagraphRef.current?.focus();
+		}
+	}, [active, paragraphs.focusItemIndex]);
 
 	return (
 		<div>
 			<h2>
-				<input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+				<input
+					placeholder="Title"
+					value={title}
+					onChange={(e) => setTitle(e.target.value)}
+					className={styles.titleInput}
+				/>
 			</h2>
 
 			<div onKeyDown={handleKeyPress}>
-				<ul>
+				<ul className={styles.paragraphList}>
 					{paragraphs.items.map((paragraph, index) => (
 						<li key={index} onClick={() => dispatchParagraphs({ action: "focus", index })}>
 							{paragraphs.focusItemIndex === index ? (
@@ -68,6 +87,7 @@ export const Note: FC<NoteProps> = ({}) => {
 									onChange={(e) => {
 										dispatchParagraphs({ action: "edit_paragraph", newValue: e.target.value });
 									}}
+									className={styles.paragraphInput}
 								/>
 							) : (
 								// view-only, rendered markdown
@@ -81,9 +101,20 @@ export const Note: FC<NoteProps> = ({}) => {
 	);
 };
 
+const styles = {
+	titleInput: css`
+		width: 100%;
+	`,
+	paragraphList: css`
+		min-height: 4rem;
+	`,
+	paragraphInput: css`
+		width: 100%;
+	`,
+};
+
 type ParagraphItem = {
 	content: string;
-	ref: React.MutableRefObject<null>;
 };
 
 type ParagraphsState = {
@@ -91,17 +122,19 @@ type ParagraphsState = {
 	items: ParagraphItem[];
 };
 
-function getDefaultParagraphsState(): ParagraphsState {
+function getDefaultParagraphsState(paragraphs: NoteData["paragraphs"] = []): ParagraphsState {
 	return {
 		focusItemIndex: 0,
-		items: [getDefaultParagraphItem()],
+		items:
+			paragraphs.length > 0
+				? paragraphs.map(getDefaultParagraphItem) //
+				: [getDefaultParagraphItem()],
 	};
 }
 
-function getDefaultParagraphItem(): ParagraphItem {
+function getDefaultParagraphItem(content = ""): ParagraphItem {
 	return {
-		content: "",
-		ref: { current: null },
+		content,
 	};
 }
 

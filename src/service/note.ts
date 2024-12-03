@@ -1,6 +1,6 @@
 import { ACCOUNT } from "../store/account";
 import { NoteData } from "../ui/Note";
-import { debounce } from "../util/debounce";
+import { debounceAsync } from "../util/debounce";
 
 export type NoteDBData = {
 	id: number;
@@ -72,4 +72,4 @@ export async function createUpdateNote(note: NoteData): Promise<NoteData> {
 	return decoded;
 }
 
-export const createUpdateNoteDebounced = debounce(createUpdateNote, 1000);
+export const createUpdateNoteDebounced = debounceAsync(createUpdateNote, 1000);

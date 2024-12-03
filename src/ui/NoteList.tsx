@@ -1,23 +1,20 @@
 import { FC, useEffect, useMemo, useState } from "react";
-
 import { css } from "emotion";
+
+import { fetchNotes, getEmptyNote } from "../service/note";
+
 import { Note, NoteData } from "./Note";
 
 export type NoteListProps = {
-	data: NoteData[];
 	search?: string;
 };
 
 const INACTIVE_NOTE_ID = -1;
 
-export const NoteList: FC<NoteListProps> = ({ data, search = "" }) => {
-	const searchedData: NoteData[] = useMemo(() => searchNotes(data, search), [data, search]);
-	const [activeNote, setActiveNote] = useState(INACTIVE_NOTE_ID);
-
-	/** if search changes, no note should be selected as active */
-	useEffect(() => {
-		setActiveNote(INACTIVE_NOTE_ID);
-	}, [search]);
+export const NoteList: FC<NoteListProps> = ({ search = "" }) => {
+	const [notesInitialData, _setNotesInitialData] = useFetchNotes();
+	const searchedData: NoteData[] = useMemo(() => searchNotes(notesInitialData, search), [notesInitialData, search]);
+	const [activeNote, setActiveNote] = useActiveNote(search);
 
 	return (
 		<div>
@@ -47,6 +44,28 @@ const styles = {
 		}
 	`,
 };
+
+function useFetchNotes() {
+	const [notesInitialData, setNotesInitialData] = useState<NoteData[]>([getEmptyNote()]);
+
+	useEffect(() => {
+		fetchNotes() //
+			.then((notes) => setNotesInitialData([getEmptyNote(), ...notes]));
+	}, []);
+
+	return [notesInitialData, setNotesInitialData] as const;
+}
+
+/** if search changes, no note should be selected as active */
+function useActiveNote(search: string) {
+	const [activeNote, setActiveNote] = useState(INACTIVE_NOTE_ID);
+
+	useEffect(() => {
+		setActiveNote(INACTIVE_NOTE_ID);
+	}, [search]);
+
+	return [activeNote, setActiveNote] as const;
+}
 
 function searchNotes(notesData: NoteData[], search: string): NoteData[] {
 	return !search

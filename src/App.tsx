@@ -3,17 +3,9 @@ import { css } from "emotion";
 
 import "./reset.css";
 
-import { NoteData } from "./ui/Note";
 import { NoteList } from "./ui/NoteList";
 
 function App() {
-	const [notesData, setNotesData] = useState<NoteData[]>([
-		{ id: 1, paragraphs: [""], title: "" }, //
-		{ id: 2, paragraphs: ["lorem ipsum", "dolor", "sit", "amet"], title: "hello _world_!" }, //
-		{ id: 3, paragraphs: ["foo", "bar", "baz"], title: "fizzbuzz" }, //
-		{ id: 4, paragraphs: ["1", "2", "3"], title: "123" }, //
-	]);
-
 	const [search, setSearch] = useState("");
 
 	return (
@@ -31,7 +23,7 @@ function App() {
 				</ul>
 			</nav>
 
-			<NoteList data={notesData} search={search} />
+			<NoteList search={search} />
 		</div>
 	);
 }

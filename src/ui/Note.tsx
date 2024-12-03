@@ -4,6 +4,7 @@ import { css } from "emotion";
 import { assertNever } from "../util/assertNever";
 import { clamp } from "../util/clamp";
 import { RenderMarkdown } from "../lib/markdown/RenderMarkdown";
+import { createUpdateNoteDebounced } from "../service/note";
 
 export type NoteData = {
 	id: number;
@@ -20,7 +21,7 @@ export const Note: FC<NoteProps> = ({ data, active = false }) => {
 	const [title, setTitle] = useState(data.title || "");
 
 	const [paragraphs, dispatchParagraphs] = useReducer(
-		paragraphsReducer, //
+		(S: ParagraphsState, A: ParagraphsAction) => paragraphsReducer(S, A, { note: data }), //
 		null,
 		() => getDefaultParagraphsState(data.paragraphs)
 	);
@@ -160,7 +161,34 @@ type ParagraphsAction =
 			index: number;
 	  };
 
-function paragraphsReducer(state: ParagraphsState, action: ParagraphsAction): ParagraphsState {
+function paragraphsReducer(
+	state: ParagraphsState, //
+	action: ParagraphsAction,
+	ctx: { note: NoteData }
+): ParagraphsState {
+	const newState = paragraphsReducerNewState(state, action);
+
+	switch (action.action) {
+		case "new_paragraph_below_focus":
+		case "edit_paragraph": {
+			createUpdateNoteDebounced({
+				...ctx.note,
+				paragraphs: newState.items.map((x) => x.content),
+			});
+			break;
+		}
+		case "focus": {
+			break;
+		}
+		default: {
+			assertNever(action);
+		}
+	}
+
+	return newState;
+}
+
+function paragraphsReducerNewState(state: ParagraphsState, action: ParagraphsAction): ParagraphsState {
 	switch (action.action) {
 		case "new_paragraph_below_focus": {
 			const items = [...state.items];

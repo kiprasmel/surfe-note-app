@@ -9,7 +9,7 @@ import { NoteList } from "./ui/NoteList";
 function App() {
 	const [notesData, setNotesData] = useState<NoteData[]>([
 		{ id: 1, paragraphs: [""], title: "" }, //
-		{ id: 2, paragraphs: ["lorem ipsum", "dolor", "sit", "amet"], title: "" }, //
+		{ id: 2, paragraphs: ["lorem ipsum", "dolor", "sit", "amet"], title: "hello _world_!" }, //
 		{ id: 3, paragraphs: ["foo", "bar", "baz"], title: "fizzbuzz" }, //
 		{ id: 4, paragraphs: ["1", "2", "3"], title: "123" }, //
 	]);

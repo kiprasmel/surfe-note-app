@@ -66,9 +66,17 @@ export const Note: FC<NoteProps> = ({ data, active = false }) => {
 
 	return (
 		<div className={styles.note}>
-			<h2 className={styles.title}>
-				{active ? (
-					<input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+			<h2
+				className={styles.title}
+				onClick={() => dispatchParagraphs({ action: "focus", index: PARAGRAPH_FOCUS_TITLE })}
+			>
+				{active && paragraphs.focusItemIndex === PARAGRAPH_FOCUS_TITLE ? (
+					<input
+						ref={activeParagraphRef}
+						placeholder="Title"
+						value={title}
+						onChange={(e) => setTitle(e.target.value)}
+					/>
 				) : (
 					<RenderMarkdown content={title} />
 				)}
@@ -188,7 +196,7 @@ function paragraphsReducer(state: ParagraphsState, action: ParagraphsAction): Pa
 		case "focus": {
 			return {
 				...state,
-				focusItemIndex: clamp(action.index, 0, state.items.length - 1),
+				focusItemIndex: clamp(action.index, -1, state.items.length - 1),
 			};
 		}
 		default: {
@@ -196,3 +204,5 @@ function paragraphsReducer(state: ParagraphsState, action: ParagraphsAction): Pa
 		}
 	}
 }
+
+const PARAGRAPH_FOCUS_TITLE = -1;

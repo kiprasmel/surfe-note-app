@@ -78,7 +78,7 @@ export const Note: FC<NoteProps> = ({ data, active = false }) => {
 						onChange={(e) => setTitle(e.target.value)}
 					/>
 				) : (
-					<RenderMarkdown content={title} />
+					<RenderMarkdown content={title || "Title"} />
 				)}
 			</h2>
 
@@ -97,7 +97,7 @@ export const Note: FC<NoteProps> = ({ data, active = false }) => {
 								/>
 							) : (
 								// view-only, rendered markdown
-								<RenderMarkdown content={paragraph.content} />
+								<RenderMarkdown content={paragraph.content || "&nbsp;"} />
 							)}
 						</li>
 					))}

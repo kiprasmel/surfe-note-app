@@ -7,8 +7,12 @@ export type NoteDBData = {
 	body: string;
 };
 
-export const getEmptyNote = (): NoteData => ({ id: NEW_NOTE_ID, title: "", paragraphs: ["", "", ""] });
-export const NEW_NOTE_ID = -1;
+export const NOTE_ID = {
+	NEW: -1,
+	INACTIVE: -2,
+} as const;
+
+export const getEmptyNote = (): NoteData => ({ id: NOTE_ID.NEW, title: "", paragraphs: ["", "", ""] });
 
 export async function fetchNotes(): Promise<NoteData[]> {
 	const res = await fetch(`https://challenge.surfe.com/${ACCOUNT.session}/notes`, {
@@ -46,7 +50,7 @@ export function encodeNote({ id, ...note }: NoteData): NoteDBData {
 export async function createUpdateNote(note: NoteData): Promise<NoteData> {
 	let method: string;
 	let url: string;
-	if (note.id === NEW_NOTE_ID) {
+	if (note.id === NOTE_ID.NEW) {
 		method = "POST";
 		url = `https://challenge.surfe.com/${ACCOUNT.session}/notes`;
 	} else {

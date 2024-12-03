@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 
 import { css } from "emotion";
 import { Note, NoteData } from "./Note";
@@ -8,21 +8,28 @@ export type NoteListProps = {
 	search?: string;
 };
 
+const INACTIVE_NOTE_ID = -1;
+
 export const NoteList: FC<NoteListProps> = ({ data, search = "" }) => {
 	const searchedData: NoteData[] = useMemo(() => searchNotes(data, search), [data, search]);
-	const [activeNote, setActiveNote] = useState(-1);
+	const [activeNote, setActiveNote] = useState(INACTIVE_NOTE_ID);
+
+	/** if search changes, no note should be selected as active */
+	useEffect(() => {
+		setActiveNote(INACTIVE_NOTE_ID);
+	}, [search]);
 
 	return (
 		<div>
 			<ul id="note-list" className={styles.noteList}>
-				{searchedData.map((x, i) => (
+				{searchedData.map((x) => (
 					<li
 						key={x.id}
 						onClick={() => {
-							setActiveNote(i);
+							setActiveNote(x.id);
 						}}
 					>
-						<Note data={x} active={activeNote === i} />
+						<Note data={x} active={activeNote === x.id} />
 					</li>
 				))}
 			</ul>

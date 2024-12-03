@@ -174,7 +174,7 @@ function paragraphsReducer(
 			createUpdateNoteDebounced({
 				...ctx.note,
 				paragraphs: newState.items.map((x) => x.content),
-			});
+			}).then((x) => console.log("resolved", x)); // TODO adjust to server-generated ID
 			break;
 		}
 		case "focus": {

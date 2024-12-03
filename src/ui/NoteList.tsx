@@ -1,15 +1,13 @@
 import { FC, useEffect, useMemo, useState } from "react";
 import { css } from "emotion";
 
-import { fetchNotes, getEmptyNote } from "../service/note";
+import { NOTE_ID, fetchNotes, getEmptyNote } from "../service/note";
 
 import { Note, NoteData } from "./Note";
 
 export type NoteListProps = {
 	search?: string;
 };
-
-const INACTIVE_NOTE_ID = -1;
 
 export const NoteList: FC<NoteListProps> = ({ search = "" }) => {
 	const [notesInitialData, _setNotesInitialData] = useFetchNotes();
@@ -58,10 +56,10 @@ function useFetchNotes() {
 
 /** if search changes, no note should be selected as active */
 function useActiveNote(search: string) {
-	const [activeNote, setActiveNote] = useState(INACTIVE_NOTE_ID);
+	const [activeNote, setActiveNote] = useState<number>(NOTE_ID.INACTIVE);
 
 	useEffect(() => {
-		setActiveNote(INACTIVE_NOTE_ID);
+		setActiveNote(NOTE_ID.INACTIVE);
 	}, [search]);
 
 	return [activeNote, setActiveNote] as const;

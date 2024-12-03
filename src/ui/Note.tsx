@@ -65,21 +65,20 @@ export const Note: FC<NoteProps> = ({ data, active = false }) => {
 	}, [active, paragraphs.focusItemIndex]);
 
 	return (
-		<div>
-			<h2>
-				<input
-					placeholder="Title"
-					value={title}
-					onChange={(e) => setTitle(e.target.value)}
-					className={styles.titleInput}
-				/>
+		<div className={styles.note}>
+			<h2 className={styles.title}>
+				{active ? (
+					<input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+				) : (
+					<RenderMarkdown content={title} />
+				)}
 			</h2>
 
 			<div onKeyDown={handleKeyPress}>
 				<ul className={styles.paragraphList}>
 					{paragraphs.items.map((paragraph, index) => (
 						<li key={index} onClick={() => dispatchParagraphs({ action: "focus", index })}>
-							{paragraphs.focusItemIndex === index ? (
+							{active && paragraphs.focusItemIndex === index ? (
 								// editable, raw text
 								<input
 									ref={activeParagraphRef}
@@ -87,7 +86,6 @@ export const Note: FC<NoteProps> = ({ data, active = false }) => {
 									onChange={(e) => {
 										dispatchParagraphs({ action: "edit_paragraph", newValue: e.target.value });
 									}}
-									className={styles.paragraphInput}
 								/>
 							) : (
 								// view-only, rendered markdown
@@ -102,14 +100,17 @@ export const Note: FC<NoteProps> = ({ data, active = false }) => {
 };
 
 const styles = {
-	titleInput: css`
-		width: 100%;
+	note: css`
+		box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 8px;
+		line-height: 1.5rem;
+		padding: 0.5rem;
+	`,
+	title: css`
+		font-size: 1.5rem;
+		line-height: 3rem;
 	`,
 	paragraphList: css`
 		min-height: 4rem;
-	`,
-	paragraphInput: css`
-		width: 100%;
 	`,
 };
 

@@ -76,4 +76,16 @@ const markdownKind2StylesMap: Record<Exclude<MarkdownKind, "raw">, string> = {
 	italic: css`
 		font-style: italic;
 	`,
+	mention: css`
+		background: hsla(200, 100%, 85%, 0.8);
+		color: hsl(200, 100%, 30%);
+		padding: 2px 4px;
+		border-radius: 4px;
+
+		&::before {
+			content: "@";
+		}
+
+		text-transform: capitalize;
+	`,
 };

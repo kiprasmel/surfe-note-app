@@ -1,5 +1,5 @@
 export type MarkdownBeginEnd = "begin" | "end";
-export type MarkdownKind = "raw" | "bold" | "italic";
+export type MarkdownKind = "raw" | "bold" | "italic" | "mention";
 export type MarkdownStackItem = [MarkdownBeginEnd, MarkdownKind, index: number];
 
 /**
@@ -12,6 +12,7 @@ export function parseMarkdown(content: string): MarkdownStackItem[] {
 		raw: false,
 		bold: false,
 		italic: false,
+		mention: false,
 	};
 
 	for (let i = 0; i < content.length; i++) {
@@ -28,11 +29,27 @@ export function parseMarkdown(content: string): MarkdownStackItem[] {
 				toggleMark("italic", i);
 				break;
 			}
-			default: {
-				if (!marks.raw) {
-					marks.raw = true;
-					stack.push(["begin", "raw", i]);
+			case "@": {
+				if (content[i + 1] === "[") {
+					endRaw(i);
+					toggleMark("mention", i);
+					i++;
+				} else {
+					handleDefault(i);
 				}
+				break;
+			}
+			case "]": {
+				if (marks.mention) {
+					endRaw(i);
+					toggleMark("mention", i);
+				} else {
+					handleDefault(i);
+				}
+				break;
+			}
+			default: {
+				handleDefault(i);
 				break;
 			}
 		}
@@ -51,6 +68,13 @@ export function parseMarkdown(content: string): MarkdownStackItem[] {
 		const beginEnd: MarkdownBeginEnd = marks[mark] ? "end" : "begin";
 		stack.push([beginEnd, mark, i]);
 		marks[mark] = !marks[mark];
+	}
+
+	function handleDefault(i: number) {
+		if (!marks.raw) {
+			marks.raw = true;
+			stack.push(["begin", "raw", i]);
+		}
 	}
 
 	return stack;

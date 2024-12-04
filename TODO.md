@@ -4,3 +4,4 @@
 - [ ] do not take away focus from note's title, if initially clicking on it
   - [ ] or, pitch this as a feature not a bug, and have a way to auto-generate title once user starts typing content
 - [ ] assign note id from api: have a temporary "clientID" for a note that we'll use to ensure the correct note will be updated (e.g. if >1 empty note is created before sending to server)
+- [ ] user tagging: if cursor in `@[|]`, and user deletes via backspace (would become `@|]`), we should delete the matching bracket too (i.e. should become `@|`). same with the other bracket.

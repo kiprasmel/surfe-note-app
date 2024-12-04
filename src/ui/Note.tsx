@@ -3,6 +3,7 @@ import { css } from "emotion";
 
 import { RenderMarkdown } from "../lib/markdown/RenderMarkdown";
 import { NoteData, useNoteStore } from "../store/note";
+import { userFullName } from "../store/user";
 
 export type NoteProps = {
 	initialData: NoteData;
@@ -72,11 +73,29 @@ export const Note: FC<NoteProps> = ({ initialData, active = false }) => {
 						<li key={index} onClick={() => store.focusParagraph(index)}>
 							{active && store.paragraphs.focusItemIndex === index ? (
 								// editable, raw text
-								<input
-									ref={activeParagraphRef}
-									value={paragraph}
-									onChange={(e) => store.editParagraph(e.target.value)}
-								/>
+								<div className={styles.activeParagraphContainer}>
+									<input
+										ref={activeParagraphRef}
+										value={paragraph}
+										onChange={(e) => store.editParagraph(e)}
+									/>
+
+									{!store.wantsToTagUser ? null : (
+										<div className={styles.userList.container}>
+											<ul className={styles.userList.list}>
+												{store.taggableUsers.map((x) => (
+													<li
+														key={x.username}
+														onClick={() => console.log("tag", x)}
+														className={styles.userList.listItem}
+													>
+														<span className={styles.userList.name}>{userFullName(x)}</span>
+													</li>
+												))}
+											</ul>
+										</div>
+									)}
+								</div>
 							) : (
 								// view-only, rendered markdown
 								<RenderMarkdown content={paragraph || "&nbsp;"} />
@@ -102,6 +121,31 @@ const styles = {
 	paragraphList: css`
 		min-height: 4rem;
 	`,
+	activeParagraphContainer: css`
+		position: relative;
+	`,
+	userList: {
+		container: css`
+			position: absolute;
+			top: 100%;
+			left: 50%;
+			transform: translateX(-50%);
+
+			background: #fff;
+			box-shadow: rgba(0, 0, 0, 0.4) 0px 30px 90px;
+			border-radius: 7px;
+			z-index: 10;
+		`,
+		list: css`
+			margin: 0.5rem 0;
+		`,
+		listItem: css`
+			padding: 0.25rem 0.75rem;
+		`,
+		name: css`
+			text-transform: capitalize;
+		`,
+	},
 };
 
 const PARAGRAPH_FOCUS_TITLE = -1;

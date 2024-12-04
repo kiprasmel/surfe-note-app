@@ -6,6 +6,8 @@ import { debounceAsync } from "../util/debounce";
 import { assertNever } from "../util/assertNever";
 import { clamp } from "../util/clamp";
 
+import { useFetchUsers } from "./user";
+
 export type NoteData = {
 	id: number;
 	title: string;
@@ -15,6 +17,9 @@ export type NoteData = {
 export function useNoteStore(initialData: NoteData) {
 	const [id, setID] = useState(initialData.id);
 	const [title, setTitle] = useState(initialData.title || "");
+
+	const [wantsToTagUser, setWantsToTagUser] = useState<boolean>(false);
+	const [taggableUsers] = useFetchUsers(); // TODO CONTEXT - currently performs a request for every single note..
 
 	async function editTitle(newValue: string) {
 		setTitle(newValue);
@@ -26,6 +31,10 @@ export function useNoteStore(initialData: NoteData) {
 		null,
 		() => getDefaultParagraphsState(initialData.paragraphs)
 	);
+
+	function getCurrentParagraph(): string {
+		return paragraphs.items[paragraphs.focusItemIndex];
+	}
 
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const createUpdateNoteDebounced = useCallback(
@@ -43,10 +52,73 @@ export function useNoteStore(initialData: NoteData) {
 	);
 
 	function focusParagraph(index: number) {
+		setWantsToTagUser(false);
 		dispatchParagraphs({ action: "focus", index });
 	}
 
-	async function editParagraph(newValue: string) {
+	async function editParagraph(e: React.ChangeEvent<HTMLInputElement>) {
+		let newValue: string = e.target.value;
+
+		const selectionStart: number = e.target.selectionStart!;
+		const selectionEnd: number = e.target.selectionEnd!;
+
+		if (selectionStart !== selectionEnd) {
+			const msg = `TODO implement selection >1 character`;
+			throw new Error(msg);
+		}
+
+		const cursor: number = selectionStart;
+
+		/**
+		 * TODO: what if is editing middle of paragraph?
+		 * should do delta from previous value (edit distance?) & see if added "@"
+		 */
+		const newLengthGreaterOrEqual: boolean = newValue.length >= getCurrentParagraph().length;
+		const wantsToTag: boolean = newLengthGreaterOrEqual && newValue[cursor - 1] === "@";
+
+		if (wantsToTag) {
+			/**
+			 * mark position of current "@" in the paragraph,
+			 * so that can type in it regularly (will only go right i.e. won't modify index of "@"),
+			 * so that we can use the paragraph text regularly,
+			 * and it'll act as the search filter for the list of users too
+			 * (we'll simply extract the "@[foo]" -> "foo" and use it for search).
+			 */
+			setWantsToTagUser(true);
+
+			const hasBracketsAlready: boolean = newValue[cursor] === "[";
+
+			if (!hasBracketsAlready) {
+				/**
+				 * current:
+				 * `foo@`
+				 *
+				 * new:
+				 * `foo@[]`
+				 */
+				newValue = newValue
+					.slice(0, cursor) //
+					.concat("[]")
+					.concat(newValue.slice(cursor));
+
+				setTimeout(() => {
+					/**
+					 * current:
+					 * `foo @|` (cursor at |)
+					 *
+					 * new:
+					 * `foo @[]|` (cursor at |)
+					 *
+					 * thus, move cursor inside `[]`:
+					 * `foo @[|]`
+					 */
+					e.target.setSelectionRange(cursor + 1, cursor + 1);
+				}, 1);
+			}
+		} else {
+			setWantsToTagUser(false);
+		}
+
 		const action: ParagraphsAction = { action: "edit_paragraph", newValue };
 		dispatchParagraphs(action);
 
@@ -56,6 +128,8 @@ export function useNoteStore(initialData: NoteData) {
 	}
 
 	async function newParagraphBelowFocus() {
+		setWantsToTagUser(false);
+
 		const action: ParagraphsAction = { action: "new_paragraph_below_focus" };
 		dispatchParagraphs(action);
 
@@ -69,10 +143,13 @@ export function useNoteStore(initialData: NoteData) {
 		editTitle,
 		paragraphs,
 		dispatchParagraphs,
+		getCurrentParagraph,
 		focusParagraph,
 		editParagraph,
 		newParagraphBelowFocus,
 		createUpdateNoteDebounced,
+		wantsToTagUser,
+		taggableUsers,
 	};
 }
 

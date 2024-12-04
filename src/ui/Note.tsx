@@ -1,45 +1,30 @@
-import { FC, useEffect, useReducer, useRef, useState } from "react";
-
+import { FC, useEffect, useRef } from "react";
 import { css } from "emotion";
-import { assertNever } from "../util/assertNever";
-import { clamp } from "../util/clamp";
-import { RenderMarkdown } from "../lib/markdown/RenderMarkdown";
-import { NOTE_ID, createUpdateNoteDebounced } from "../service/note";
 
-export type NoteData = {
-	id: number;
-	title: string;
-	paragraphs: string[];
-};
+import { RenderMarkdown } from "../lib/markdown/RenderMarkdown";
+import { NoteData, useNoteStore } from "../store/note";
 
 export type NoteProps = {
-	note: NoteData;
-	setNotes: React.Dispatch<React.SetStateAction<NoteData[]>>;
+	initialData: NoteData;
 	active: boolean;
 };
 
-export const Note: FC<NoteProps> = ({ note, setNotes, active = false }) => {
-	const [title, setTitle] = useState(note.title || "");
-
-	const [paragraphs, dispatchParagraphs] = useReducer(
-		(S: ParagraphsState, A: ParagraphsAction) => paragraphsReducer(S, A, { note, setNotes }), //
-		null,
-		() => getDefaultParagraphsState(note.paragraphs)
-	);
+export const Note: FC<NoteProps> = ({ initialData, active = false }) => {
+	const store = useNoteStore(initialData);
 	const activeParagraphRef = useRef<HTMLInputElement>(null);
 
 	function handleKeyPress(e: React.KeyboardEvent): void {
 		switch (e.key) {
 			case "Enter": {
-				dispatchParagraphs({ action: "new_paragraph_below_focus" });
+				store.newParagraphBelowFocus();
 				break;
 			}
 			case "ArrowUp": {
-				dispatchParagraphs({ action: "focus", index: paragraphs.focusItemIndex - 1 });
+				store.focusParagraph(store.paragraphs.focusItemIndex - 1);
 				break;
 			}
 			case "ArrowDown": {
-				dispatchParagraphs({ action: "focus", index: paragraphs.focusItemIndex + 1 });
+				store.focusParagraph(store.paragraphs.focusItemIndex + 1);
 				break;
 			}
 			default: {
@@ -64,42 +49,37 @@ export const Note: FC<NoteProps> = ({ note, setNotes, active = false }) => {
 		if (active) {
 			activeParagraphRef.current?.focus();
 		}
-	}, [active, paragraphs.focusItemIndex]);
+	}, [active, store.paragraphs.focusItemIndex]);
 
 	return (
 		<div className={styles.note}>
-			<h2
-				className={styles.title}
-				onClick={() => dispatchParagraphs({ action: "focus", index: PARAGRAPH_FOCUS_TITLE })}
-			>
-				{active && paragraphs.focusItemIndex === PARAGRAPH_FOCUS_TITLE ? (
+			<h2 className={styles.title} onClick={() => store.focusParagraph(PARAGRAPH_FOCUS_TITLE)}>
+				{active && store.paragraphs.focusItemIndex === PARAGRAPH_FOCUS_TITLE ? (
 					<input
 						ref={activeParagraphRef}
 						placeholder="Title"
-						value={title}
-						onChange={(e) => setTitle(e.target.value)}
+						value={store.title}
+						onChange={(e) => store.editTitle(e.target.value)}
 					/>
 				) : (
-					<RenderMarkdown content={title || "Title"} />
+					<RenderMarkdown content={store.title || "Title"} />
 				)}
 			</h2>
 
 			<div onKeyDown={handleKeyPress}>
 				<ul className={styles.paragraphList}>
-					{paragraphs.items.map((paragraph, index) => (
-						<li key={index} onClick={() => dispatchParagraphs({ action: "focus", index })}>
-							{active && paragraphs.focusItemIndex === index ? (
+					{store.paragraphs.items.map((paragraph, index) => (
+						<li key={index} onClick={() => store.focusParagraph(index)}>
+							{active && store.paragraphs.focusItemIndex === index ? (
 								// editable, raw text
 								<input
 									ref={activeParagraphRef}
-									value={paragraph.content}
-									onChange={(e) => {
-										dispatchParagraphs({ action: "edit_paragraph", newValue: e.target.value });
-									}}
+									value={paragraph}
+									onChange={(e) => store.editParagraph(e.target.value)}
 								/>
 							) : (
 								// view-only, rendered markdown
-								<RenderMarkdown content={paragraph.content || "&nbsp;"} />
+								<RenderMarkdown content={paragraph || "&nbsp;"} />
 							)}
 						</li>
 					))}
@@ -124,131 +104,4 @@ const styles = {
 	`,
 };
 
-type ParagraphItem = {
-	content: string;
-};
-
-type ParagraphsState = {
-	focusItemIndex: number;
-	items: ParagraphItem[];
-};
-
-function getDefaultParagraphsState(paragraphs: NoteData["paragraphs"] = []): ParagraphsState {
-	return {
-		focusItemIndex: 0,
-		items:
-			paragraphs.length > 0
-				? paragraphs.map(getDefaultParagraphItem) //
-				: [getDefaultParagraphItem()],
-	};
-}
-
-function getDefaultParagraphItem(content = ""): ParagraphItem {
-	return {
-		content,
-	};
-}
-
-type ParagraphsAction =
-	| {
-			action: "new_paragraph_below_focus";
-	  }
-	| {
-			action: "edit_paragraph";
-			newValue: string;
-	  }
-	| {
-			action: "focus";
-			index: number;
-	  };
-
-type ParagraphsReducerCtx = Pick<NoteProps, "note" | "setNotes">;
-
-function paragraphsReducer(
-	state: ParagraphsState, //
-	action: ParagraphsAction,
-	ctx: ParagraphsReducerCtx
-): ParagraphsState {
-	const newState = paragraphsReducerNewState(state, action);
-
-	switch (action.action) {
-		case "new_paragraph_below_focus":
-		case "edit_paragraph": {
-			createUpdateNoteDebounced({ ...ctx.note, paragraphs: newState.items.map((x) => x.content) }) //
-				.then((noteFromAPI) => assignNoteIDFromAPI(ctx, noteFromAPI));
-			break;
-		}
-		case "focus": {
-			break;
-		}
-		default: {
-			assertNever(action);
-		}
-	}
-
-	return newState;
-}
-
-function paragraphsReducerNewState(state: ParagraphsState, action: ParagraphsAction): ParagraphsState {
-	switch (action.action) {
-		case "new_paragraph_below_focus": {
-			const items = [...state.items];
-			items.splice(state.focusItemIndex + 1, 0, getDefaultParagraphItem()); // insert a new item
-
-			const focusItemIndex = state.focusItemIndex + 1; // focus at the new item
-
-			return {
-				...state,
-				items,
-				focusItemIndex,
-			};
-		}
-		case "edit_paragraph": {
-			/**
-			 * could be slow for long paragraphs.
-			 * we could have separate state just for editing the current paragraph,
-			 * and re-sync it with the global `items` state at an interval,
-			 * but that's additional complexity beyond our current scope.
-			 */
-			return {
-				...state,
-				items: state.items.map((x, i) =>
-					i !== state.focusItemIndex
-						? x
-						: {
-								...x,
-								content: action.newValue,
-							}
-				),
-			};
-		}
-		case "focus": {
-			return {
-				...state,
-				focusItemIndex: clamp(action.index, -1, state.items.length - 1),
-			};
-		}
-		default: {
-			assertNever(action);
-		}
-	}
-}
-
 const PARAGRAPH_FOCUS_TITLE = -1;
-
-function assignNoteIDFromAPI(ctx: ParagraphsReducerCtx, noteFromAPI: NoteData) {
-	if (ctx.note.id === NOTE_ID.NEW) {
-		ctx.setNotes((notes) =>
-			notes.map((x) =>
-				x.id === NOTE_ID.NEW //
-					? /**
-						 * TODO `{ ...x, id: noteFromAPI.id }` when state
-						 * moved to note store for all notes.
-						 * right now, if slow request, could overwrite newly edited value
-						 */
-						noteFromAPI
-					: x
-			)
-		);
-	}
-}

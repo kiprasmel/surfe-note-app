@@ -2,15 +2,16 @@ import { FC, useEffect, useMemo, useState } from "react";
 import { css } from "emotion";
 
 import { NOTE_ID, fetchNotes, getEmptyNote } from "../service/note";
+import { NoteData } from "../store/note";
 
-import { Note, NoteData } from "./Note";
+import { Note } from "./Note";
 
 export type NoteListProps = {
 	search?: string;
 };
 
 export const NoteList: FC<NoteListProps> = ({ search = "" }) => {
-	const [notesInitialData, setNotesInitialData] = useFetchNotes();
+	const [notesInitialData] = useFetchNotes();
 	const searchedData: NoteData[] = useMemo(() => searchNotes(notesInitialData, search), [notesInitialData, search]);
 	const [activeNote, setActiveNote] = useActiveNote(search);
 
@@ -24,7 +25,7 @@ export const NoteList: FC<NoteListProps> = ({ search = "" }) => {
 							setActiveNote(x.id);
 						}}
 					>
-						<Note note={x} setNotes={setNotesInitialData} active={activeNote === x.id} />
+						<Note initialData={x} active={activeNote === x.id} />
 					</li>
 				))}
 			</ul>

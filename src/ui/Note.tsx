@@ -4,7 +4,7 @@ import { css } from "emotion";
 import { assertNever } from "../util/assertNever";
 import { clamp } from "../util/clamp";
 import { RenderMarkdown } from "../lib/markdown/RenderMarkdown";
-import { createUpdateNoteDebounced } from "../service/note";
+import { NOTE_ID, createUpdateNoteDebounced } from "../service/note";
 
 export type NoteData = {
 	id: number;
@@ -13,17 +13,18 @@ export type NoteData = {
 };
 
 export type NoteProps = {
-	data: NoteData;
+	note: NoteData;
+	setNotes: React.Dispatch<React.SetStateAction<NoteData[]>>;
 	active: boolean;
 };
 
-export const Note: FC<NoteProps> = ({ data, active = false }) => {
-	const [title, setTitle] = useState(data.title || "");
+export const Note: FC<NoteProps> = ({ note, setNotes, active = false }) => {
+	const [title, setTitle] = useState(note.title || "");
 
 	const [paragraphs, dispatchParagraphs] = useReducer(
-		(S: ParagraphsState, A: ParagraphsAction) => paragraphsReducer(S, A, { note: data }), //
+		(S: ParagraphsState, A: ParagraphsAction) => paragraphsReducer(S, A, { note, setNotes }), //
 		null,
-		() => getDefaultParagraphsState(data.paragraphs)
+		() => getDefaultParagraphsState(note.paragraphs)
 	);
 	const activeParagraphRef = useRef<HTMLInputElement>(null);
 
@@ -161,20 +162,20 @@ type ParagraphsAction =
 			index: number;
 	  };
 
+type ParagraphsReducerCtx = Pick<NoteProps, "note" | "setNotes">;
+
 function paragraphsReducer(
 	state: ParagraphsState, //
 	action: ParagraphsAction,
-	ctx: { note: NoteData }
+	ctx: ParagraphsReducerCtx
 ): ParagraphsState {
 	const newState = paragraphsReducerNewState(state, action);
 
 	switch (action.action) {
 		case "new_paragraph_below_focus":
 		case "edit_paragraph": {
-			createUpdateNoteDebounced({
-				...ctx.note,
-				paragraphs: newState.items.map((x) => x.content),
-			}).then((x) => console.log("resolved", x)); // TODO adjust to server-generated ID
+			createUpdateNoteDebounced({ ...ctx.note, paragraphs: newState.items.map((x) => x.content) }) //
+				.then((noteFromAPI) => assignNoteIDFromAPI(ctx, noteFromAPI));
 			break;
 		}
 		case "focus": {
@@ -234,3 +235,20 @@ function paragraphsReducerNewState(state: ParagraphsState, action: ParagraphsAct
 }
 
 const PARAGRAPH_FOCUS_TITLE = -1;
+
+function assignNoteIDFromAPI(ctx: ParagraphsReducerCtx, noteFromAPI: NoteData) {
+	if (ctx.note.id === NOTE_ID.NEW) {
+		ctx.setNotes((notes) =>
+			notes.map((x) =>
+				x.id === NOTE_ID.NEW //
+					? /**
+						 * TODO `{ ...x, id: noteFromAPI.id }` when state
+						 * moved to note store for all notes.
+						 * right now, if slow request, could overwrite newly edited value
+						 */
+						noteFromAPI
+					: x
+			)
+		);
+	}
+}

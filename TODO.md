@@ -3,3 +3,4 @@
 - [ ] validate if markdown is valid, e.g. beginning bold without ending it
 - [ ] do not take away focus from note's title, if initially clicking on it
   - [ ] or, pitch this as a feature not a bug, and have a way to auto-generate title once user starts typing content
+- [ ] assign note id from api: have a temporary "clientID" for a note that we'll use to ensure the correct note will be updated (e.g. if >1 empty note is created before sending to server)

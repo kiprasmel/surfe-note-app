@@ -10,7 +10,7 @@ export type NoteListProps = {
 };
 
 export const NoteList: FC<NoteListProps> = ({ search = "" }) => {
-	const [notesInitialData, _setNotesInitialData] = useFetchNotes();
+	const [notesInitialData, setNotesInitialData] = useFetchNotes();
 	const searchedData: NoteData[] = useMemo(() => searchNotes(notesInitialData, search), [notesInitialData, search]);
 	const [activeNote, setActiveNote] = useActiveNote(search);
 
@@ -24,7 +24,7 @@ export const NoteList: FC<NoteListProps> = ({ search = "" }) => {
 							setActiveNote(x.id);
 						}}
 					>
-						<Note data={x} active={activeNote === x.id} />
+						<Note note={x} setNotes={setNotesInitialData} active={activeNote === x.id} />
 					</li>
 				))}
 			</ul>

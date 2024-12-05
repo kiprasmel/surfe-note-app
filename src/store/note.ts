@@ -93,19 +93,33 @@ export function useNoteStore(
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const syncNoteUpdateWithAPIAndParentState = useCallback(
 		debounceAsync(async (data: NoteData) => {
-			/**
-			 * after initial creation,
-			 * will have the proper `serverId` assigned.
-			 */
-			const newNote: NoteData = await createUpdateNote(data);
+			const setWithNewData = (newData: NoteData) => {
+				setNotesData((xs) =>
+					xs.map((x) =>
+						x.clientId === newData.clientId //
+							? newData
+							: x
+					)
+				);
+			};
 
-			setNotesData((xs) =>
-				xs.map((x) =>
-					x.clientId === newNote.clientId //
-						? newNote
-						: x
-				)
-			);
+			const isInitial: boolean = data.id === NOTE_ID.NEW;
+
+			if (!isInitial) {
+				/** save early, don't wait for async call to finish */
+				setWithNewData(data);
+			}
+
+			/** perform sync with DB */
+			const updated: NoteData = await createUpdateNote(data);
+
+			if (isInitial) {
+				/**
+				 * after initial creation,
+				 * will have the proper `serverId` assigned.
+				 */
+				setWithNewData(updated);
+			}
 		}, 500),
 		[]
 	);

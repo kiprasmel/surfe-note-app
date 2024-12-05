@@ -119,15 +119,23 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false,
 									{!store.wantsToTagUser.wants ? null : (
 										<div className={styles.userList.container}>
 											<ul className={styles.userList.list}>
-												{limitTaggableUsers(store.wantsToTagUser).map((x) => (
-													<li
-														key={x.username}
-														onClick={() => store.acceptUserMentionSelection(x)}
-														className={styles.userList.listItem}
-													>
-														<span className={styles.userList.name}>{userFullName(x)}</span>
+												{store.wantsToTagUser.usersMatchingSearch.length ? (
+													limitTaggableUsers(store.wantsToTagUser).map((x) => (
+														<li
+															key={x.username}
+															onClick={() => store.acceptUserMentionSelection(x)}
+															className={styles.userList.listItem}
+														>
+															<span className={styles.userList.name}>
+																{userFullName(x)}
+															</span>
+														</li>
+													))
+												) : (
+													<li className={styles.userList.listItem}>
+														<span className={styles.userList.name}>Nothing found..</span>
 													</li>
-												))}
+												)}
 											</ul>
 										</div>
 									)}

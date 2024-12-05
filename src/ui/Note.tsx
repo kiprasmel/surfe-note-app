@@ -9,9 +9,10 @@ export type NoteProps = {
 	initialData: NoteData;
 	setNotesData: React.Dispatch<React.SetStateAction<NoteData[]>>;
 	active: boolean;
+	isOnlyOne?: boolean;
 };
 
-export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false }) => {
+export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false, isOnlyOne = false }) => {
 	const activeParagraphRef = useRef<HTMLInputElement>(null);
 	const store = useNoteStore(initialData, setNotesData, activeParagraphRef);
 
@@ -51,6 +52,18 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false 
 		if (prevent) e.preventDefault();
 	}
 
+	const shouldShowTitlePreview: boolean = isOnlyOne && !store.title;
+	const shouldShowParagraphPreview: boolean = isOnlyOne && store.paragraphs.items.every((x) => !x);
+
+	function getTitleContent() {
+		return shouldShowTitlePreview ? "Your first note" : store.title || "Title";
+	}
+	function getParagraphContent(paragraph: string, index: number) {
+		return shouldShowParagraphPreview && index === 0
+			? "*Click* me. *Start* typing. _Good things to come..._"
+			: paragraph || "&nbsp;";
+	}
+
 	/**
 	 * re-focus the currently active paragraph
 	 * every time the focused item index changes.
@@ -77,7 +90,7 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false 
 						onChange={(e) => store.updateTitle(e.target.value)}
 					/>
 				) : (
-					<RenderMarkdown content={store.title || "Title"} />
+					<RenderMarkdown content={getTitleContent()} />
 				)}
 			</h2>
 
@@ -112,7 +125,7 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false 
 								</div>
 							) : (
 								// view-only, rendered markdown
-								<RenderMarkdown content={paragraph || "&nbsp;"} />
+								<RenderMarkdown content={getParagraphContent(paragraph, index)} />
 							)}
 						</li>
 					))}

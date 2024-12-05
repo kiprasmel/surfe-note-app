@@ -194,6 +194,7 @@ const styles = {
 		box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 8px;
 		line-height: 1.5rem;
 		padding: 0.5rem;
+		border-radius: 7px;
 
 		${MEDIA_QUERY.desktopUp} {
 			flex: 1;

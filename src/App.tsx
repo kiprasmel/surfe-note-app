@@ -112,7 +112,6 @@ const styles = {
 			width: 4rem;
 			height: 4rem;
 
-			border: none;
 			background: linear-gradient(45deg, hsl(0, 100%, 70%), hsl(240, 100%, 70%));
 			border-radius: 100%;
 			color: #fff;
@@ -125,8 +124,6 @@ const styles = {
 			display: flex;
 			justify-content: center;
 			align-items: center;
-
-			cursor: pointer;
 		`,
 		plusLine1: css`
 			width: 6px;

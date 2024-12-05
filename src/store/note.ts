@@ -20,6 +20,8 @@ export type NoteData = {
 
 	title: string;
 	paragraphs: string[];
+
+	removed: boolean;
 };
 
 export const getNewNote = (): NoteData => ({
@@ -27,6 +29,7 @@ export const getNewNote = (): NoteData => ({
 	id: NOTE_ID.NEW,
 	title: "",
 	paragraphs: ["", "", ""],
+	removed: false,
 });
 
 const generateNewNoteId = () => {
@@ -54,7 +57,7 @@ export function useNoteStore(
 	setNotesData: NoteProps["setNotesData"],
 	activeParagraphRef: React.RefObject<HTMLInputElement>
 ) {
-	const { clientId, id } = initialData;
+	const { clientId, id, removed } = initialData;
 
 	const [title, setTitle] = useState(initialData.title || "");
 
@@ -114,6 +117,17 @@ export function useNoteStore(
 			id,
 			title: newTitle,
 			paragraphs: paragraphs.items,
+			removed,
+		});
+	}
+
+	async function updateRemoved(newRemoved: boolean) {
+		await syncNoteUpdateWithAPIAndParentState({
+			clientId,
+			id,
+			title,
+			paragraphs: paragraphs.items,
+			removed: newRemoved,
 		});
 	}
 
@@ -123,6 +137,7 @@ export function useNoteStore(
 			id,
 			title,
 			paragraphs: newParagraphs.items,
+			removed,
 		});
 	}
 
@@ -189,6 +204,7 @@ export function useNoteStore(
 	return {
 		title,
 		updateTitle,
+		updateRemoved,
 		paragraphs,
 		getCurrentParagraph,
 		focusParagraph,

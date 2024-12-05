@@ -7,6 +7,7 @@ import { userFullName } from "../store/user";
 import { MEDIA_QUERY } from "../util/mediaQuery";
 import { UserDB } from "../service/user";
 import { WantsToTagUser } from "../store/mention";
+import { ReactComponent as TrashIcon } from "../icon/Trash.svg";
 
 export type NoteProps = {
 	initialData: NoteData;
@@ -148,12 +149,30 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false,
 					))}
 				</ul>
 			</div>
+
+			<nav>
+				<ul
+					className={cx(styles.actions.list, {
+						[css`
+							opacity: 0;
+						`]: !active,
+					})}
+				>
+					<li className={styles.actions.removeNoteAction}>
+						<button type="button" onClick={() => store.updateRemoved(true)}>
+							<TrashIcon width={20} height={20} />
+						</button>
+					</li>
+				</ul>
+			</nav>
 		</div>
 	);
 };
 
 const styles = {
 	note: css`
+		position: relative;
+
 		box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 8px;
 		line-height: 1.5rem;
 		padding: 0.5rem;
@@ -205,6 +224,25 @@ const styles = {
 		`,
 		name: css`
 			text-transform: capitalize;
+		`,
+	},
+	actions: {
+		list: css`
+			position: absolute;
+			bottom: 6px;
+			right: 0px;
+
+			display: flex;
+			justify-content: center;
+			align-items: center;
+
+			${MEDIA_QUERY.tabletUp} {
+				bottom: 10px;
+				right: 8px;
+			}
+		`,
+		removeNoteAction: css`
+			margin-left: auto;
 		`,
 	},
 };

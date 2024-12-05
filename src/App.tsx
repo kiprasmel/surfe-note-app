@@ -14,14 +14,14 @@ function App() {
 			<div className={styles.app}>
 				<nav className={styles.nav.nav}>
 					<ul className={styles.nav.list}>
-						<li>
+						<li className={styles.nav.listItem}>
 							<input
 								placeholder="Search in notes.."
 								value={search}
 								onChange={(e) => setSearch(e.target.value)}
+								className={styles.nav.search}
 							/>
 						</li>
-						<li className={styles.nav.userItem}>User</li>
 					</ul>
 				</nav>
 
@@ -41,6 +41,25 @@ const styles = {
 		`,
 		list: css`
 			display: flex;
+			padding: 0.1rem;
+
+			border-radius: 4px;
+			box-shadow:
+				rgba(0, 0, 0, 0.12) 0px -12px 30px,
+				rgba(0, 0, 0, 0.07) 0px 4px 6px,
+				rgba(0, 0, 0, 0.17) 0px 10px 13px,
+				rgba(0, 0, 0, 0.09) 0px -3px 5px;
+		`,
+		listItem: css`
+			width: 100%;
+		`,
+		search: css`
+			&,
+			&:focus {
+				font-size: 1.5rem;
+				width: 100%;
+				padding: 0.5rem;
+			}
 		`,
 		userItem: css`
 			margin-left: auto;

@@ -13,6 +13,7 @@ export function useFetchNotes() {
 
 	async function refetch() {
 		return fetchNotes() //
+			.then(hideRemovedNotes)
 			.then((notes) => setNotesData([getNewNote(), ...notes]));
 	}
 
@@ -30,6 +31,10 @@ export function useActiveNote(search: string) {
 	}, [search]);
 
 	return [activeNote, setActiveNote] as const;
+}
+
+export function hideRemovedNotes(notesData: NoteData[]): NoteData[] {
+	return notesData.filter((x) => !x.removed);
 }
 
 export function searchNotes(notesData: NoteData[], search: string): NoteData[] {

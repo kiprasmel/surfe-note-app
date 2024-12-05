@@ -38,3 +38,9 @@ input:focus {
 	padding: 0;
 	width: 100%;
 }
+
+button {
+	border: none;
+	background: #fff;
+	cursor: pointer;
+}

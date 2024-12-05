@@ -70,6 +70,19 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false,
 			: paragraph || "&nbsp;";
 	}
 
+	function getDynamicStyles() {
+		const topPos = activeParagraphRef.current!.getBoundingClientRect().bottom + 5;
+		const dynamicStyle = {
+			userListContainer: {
+				top: topPos + "px",
+				width: activeParagraphRef.current!.offsetWidth + "px",
+				maxHeight: window.innerHeight - topPos - 32 + "px",
+			},
+		};
+
+		return dynamicStyle;
+	}
+
 	/**
 	 * re-focus the currently active paragraph
 	 * every time the focused item index changes.
@@ -118,7 +131,10 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false,
 									/>
 
 									{!store.wantsToTagUser.wants ? null : (
-										<div className={styles.userList.container}>
+										<div
+											className={styles.userList.container}
+											style={getDynamicStyles().userListContainer}
+										>
 											<ul className={styles.userList.list}>
 												{store.wantsToTagUser.usersMatchingSearch.length ? (
 													limitTaggableUsers(store.wantsToTagUser).map((x) => (
@@ -206,10 +222,9 @@ const styles = {
 	`,
 	userList: {
 		container: css`
-			position: absolute;
-			top: 100%;
-			left: 50%;
-			transform: translateX(-50%);
+			position: fixed;
+			overflow-y: scroll;
+			scrollbar-width: none;
 
 			background: #fff;
 			box-shadow: rgba(0, 0, 0, 0.4) 0px 30px 90px;

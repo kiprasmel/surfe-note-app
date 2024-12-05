@@ -1,21 +1,28 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import { fetchNotes } from "../service/note";
 
 import { NOTE_ID, NoteData, getNewNote } from "./note";
 
 export function useFetchNotes() {
-	const [notesData, setNotesData] = useState<NoteData[]>([getNewNote()]);
+	const [notesData, _setNotesData] = useState<NoteData[]>([getNewNote()]);
+
+	const setNotesData = useCallback((data: NoteData[] | ((prev: NoteData[]) => NoteData[])) => {
+		_setNotesData((prev) => {
+			const data2 = data instanceof Function ? data(prev) : data;
+			const data3: NoteData[] = hideRemovedNotes(data2);
+			return data3;
+		});
+	}, []);
+
+	const refetch = useCallback(
+		() => fetchNotes().then((notes) => setNotesData([getNewNote(), ...notes])),
+		[setNotesData]
+	);
 
 	useEffect(() => {
 		refetch();
-	}, []);
-
-	async function refetch() {
-		return fetchNotes() //
-			.then(hideRemovedNotes)
-			.then((notes) => setNotesData([getNewNote(), ...notes]));
-	}
+	}, [refetch]);
 
 	return { notesData, setNotesData, refetch } as const;
 }

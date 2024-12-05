@@ -1,7 +1,7 @@
 import { FC, useMemo } from "react";
 import { css } from "emotion";
 
-import { NoteData } from "../store/note";
+import { NoteData, getNewNote } from "../store/note";
 import { searchNotes, useActiveNote } from "../store/notes";
 
 import { Note, NoteProps } from "./Note";
@@ -19,11 +19,31 @@ export const NoteList: FC<NoteListProps> = ({ notesData, setNotesData, search = 
 	return (
 		<div>
 			<ul id="note-list" className={styles.noteList}>
-				{searchedData.map((x) => (
-					<li key={x.clientId} onClick={() => setActiveNote(x.clientId)}>
-						<Note initialData={x} setNotesData={setNotesData} active={activeNote === x.clientId} />
-					</li>
-				))}
+				{searchedData.length ? (
+					searchedData.map((x, i) => (
+						<li key={x.clientId} onClick={() => setActiveNote(x.clientId)}>
+							<Note
+								initialData={x}
+								setNotesData={setNotesData}
+								active={activeNote === x.clientId}
+								isOnlyOne={i === 0 && notesData.length === 1}
+							/>
+						</li>
+					))
+				) : (
+					// empty note when search empty
+					<div>
+						<Note
+							initialData={{
+								...getNewNote(),
+								title: "Uh oh..",
+								paragraphs: ["Looks like *0* notes matched your search...", "Try adding _some more!_"],
+							}}
+							setNotesData={() => void 0}
+							active={false}
+						/>
+					</div>
+				)}
 			</ul>
 		</div>
 	);

@@ -2,6 +2,26 @@ export type MarkdownBeginEnd = "begin" | "end";
 export type MarkdownKind = "raw" | "bold" | "italic" | "mention";
 export type MarkdownStackItem = [MarkdownBeginEnd, MarkdownKind, index: number];
 
+export const TokensBegin = {
+	bold: "*",
+	italic: "_",
+	mention: "@[",
+
+	/**
+	 * special case:
+	 * actually catches everything that did not match,
+	 * but added here so that length matches.
+	 */
+	raw: "x",
+} as const satisfies Record<MarkdownKind, string>;
+
+export const TokensEnd = {
+	bold: "",
+	italic: "",
+	mention: "]",
+	raw: "",
+} as const satisfies Record<MarkdownKind, string>;
+
 /**
  * returns a stack of items with begin/end indicators
  */
@@ -19,18 +39,18 @@ export function parseMarkdown(content: string): MarkdownStackItem[] {
 		const c: string = content[i];
 
 		switch (c) {
-			case "*": {
+			case TokensBegin.bold[0]: {
 				endRaw(i);
 				toggleMark("bold", i);
 				break;
 			}
-			case "_": {
+			case TokensBegin.italic[0]: {
 				endRaw(i);
 				toggleMark("italic", i);
 				break;
 			}
-			case "@": {
-				if (content[i + 1] === "[") {
+			case TokensBegin.mention[0]: {
+				if (content[i + 1] === TokensBegin.mention[1]) {
 					endRaw(i);
 					toggleMark("mention", i);
 					i++;
@@ -39,7 +59,7 @@ export function parseMarkdown(content: string): MarkdownStackItem[] {
 				}
 				break;
 			}
-			case "]": {
+			case TokensEnd.mention[0]: {
 				if (marks.mention) {
 					endRaw(i);
 					toggleMark("mention", i);

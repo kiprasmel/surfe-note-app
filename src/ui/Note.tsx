@@ -11,13 +11,13 @@ export type NoteProps = {
 };
 
 export const Note: FC<NoteProps> = ({ initialData, active = false }) => {
-	const store = useNoteStore(initialData);
 	const activeParagraphRef = useRef<HTMLInputElement>(null);
+	const store = useNoteStore(initialData, activeParagraphRef);
 
 	function handleKeyPress(e: React.KeyboardEvent): void {
 		switch (e.key) {
 			case "Enter": {
-				store.newParagraphBelowFocus();
+				store.handleEventEnterPress();
 				break;
 			}
 			case "ArrowUp": {
@@ -80,13 +80,13 @@ export const Note: FC<NoteProps> = ({ initialData, active = false }) => {
 										onChange={(e) => store.editParagraph(e)}
 									/>
 
-									{!store.wantsToTagUser ? null : (
+									{!store.wantsToTagUser.wants ? null : (
 										<div className={styles.userList.container}>
 											<ul className={styles.userList.list}>
-												{store.taggableUsers.map((x) => (
+												{store.wantsToTagUser.usersMatchingSearch.map((x) => (
 													<li
 														key={x.username}
-														onClick={() => console.log("tag", x)}
+														onClick={() => store.acceptUserMentionSelection(x)}
 														className={styles.userList.listItem}
 													>
 														<span className={styles.userList.name}>{userFullName(x)}</span>

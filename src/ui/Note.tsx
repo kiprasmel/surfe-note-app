@@ -99,88 +99,90 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false,
 	}, [active, store.paragraphs.focusItemIndex]);
 
 	return (
-		<div
-			className={cx(styles.note, {
-				[styles.noteActive]: active,
-			})}
-		>
-			<h2 className={styles.title} onClick={() => store.focusParagraph(PARAGRAPH_FOCUS_TITLE)}>
-				{active && store.paragraphs.focusItemIndex === PARAGRAPH_FOCUS_TITLE ? (
-					<input
-						ref={activeParagraphRef}
-						placeholder={titlePlaceholder}
-						value={store.title}
-						onChange={(e) => store.updateTitle(e.target.value)}
-					/>
-				) : (
-					<RenderMarkdown content={getTitleContent()} />
-				)}
-			</h2>
+		<div className={styles.note}>
+			<div
+				className={cx(styles.scroll, {
+					[styles.scrollActive]: active,
+				})}
+			>
+				<h2 className={styles.title} onClick={() => store.focusParagraph(PARAGRAPH_FOCUS_TITLE)}>
+					{active && store.paragraphs.focusItemIndex === PARAGRAPH_FOCUS_TITLE ? (
+						<input
+							ref={activeParagraphRef}
+							placeholder={titlePlaceholder}
+							value={store.title}
+							onChange={(e) => store.updateTitle(e.target.value)}
+						/>
+					) : (
+						<RenderMarkdown content={getTitleContent()} />
+					)}
+				</h2>
 
-			<div onKeyDown={handleKeyPress}>
-				<ul className={styles.paragraphList}>
-					{store.paragraphs.items.map((paragraph, index) => (
-						<li key={index} onClick={() => store.focusParagraph(index)}>
-							{active && store.paragraphs.focusItemIndex === index ? (
-								// editable, raw text
-								<div className={styles.activeParagraphContainer}>
-									<input
-										ref={activeParagraphRef}
-										value={paragraph}
-										onChange={(e) => store.editParagraph(e)}
-									/>
+				<div onKeyDown={handleKeyPress}>
+					<ul className={styles.paragraphList}>
+						{store.paragraphs.items.map((paragraph, index) => (
+							<li key={index} onClick={() => store.focusParagraph(index)}>
+								{active && store.paragraphs.focusItemIndex === index ? (
+									// editable, raw text
+									<div className={styles.activeParagraphContainer}>
+										<input
+											ref={activeParagraphRef}
+											value={paragraph}
+											onChange={(e) => store.editParagraph(e)}
+										/>
 
-									{!store.wantsToTagUser.wants ? null : (
-										<div
-											className={styles.userList.container}
-											style={getDynamicStyles().userListContainer}
-										>
-											<ul className={styles.userList.list}>
-												{store.wantsToTagUser.usersMatchingSearch.length ? (
-													limitTaggableUsers(store.wantsToTagUser).map((x) => (
-														<li
-															key={x.username}
-															onClick={() => store.acceptUserMentionSelection(x)}
-															className={styles.userList.listItem}
-														>
+										{!store.wantsToTagUser.wants ? null : (
+											<div
+												className={styles.userList.container}
+												style={getDynamicStyles().userListContainer}
+											>
+												<ul className={styles.userList.list}>
+													{store.wantsToTagUser.usersMatchingSearch.length ? (
+														limitTaggableUsers(store.wantsToTagUser).map((x) => (
+															<li
+																key={x.username}
+																onClick={() => store.acceptUserMentionSelection(x)}
+																className={styles.userList.listItem}
+															>
+																<span className={styles.userList.name}>
+																	{userFullName(x)}
+																</span>
+															</li>
+														))
+													) : (
+														<li className={styles.userList.listItem}>
 															<span className={styles.userList.name}>
-																{userFullName(x)}
+																Nothing found..
 															</span>
 														</li>
-													))
-												) : (
-													<li className={styles.userList.listItem}>
-														<span className={styles.userList.name}>Nothing found..</span>
-													</li>
-												)}
-											</ul>
-										</div>
-									)}
-								</div>
-							) : (
-								// view-only, rendered markdown
-								<RenderMarkdown content={getParagraphContent(paragraph, index)} />
-							)}
-						</li>
-					))}
-				</ul>
+													)}
+												</ul>
+											</div>
+										)}
+									</div>
+								) : (
+									// view-only, rendered markdown
+									<RenderMarkdown content={getParagraphContent(paragraph, index)} />
+								)}
+							</li>
+						))}
+					</ul>
+				</div>
 			</div>
 
-			<nav>
-				<ul
-					className={cx(styles.actions.list, {
-						[css`
-							opacity: 0;
-						`]: !active,
-					})}
-				>
-					<li className={styles.actions.removeNoteAction}>
-						<button type="button" onClick={() => store.updateRemoved(true)}>
-							<TrashIcon width={20} height={20} />
-						</button>
-					</li>
-				</ul>
-			</nav>
+			<ul
+				className={cx(styles.actions.list, {
+					[css`
+						opacity: 0;
+					`]: !active,
+				})}
+			>
+				<li className={styles.actions.removeNoteAction}>
+					<button type="button" onClick={() => store.updateRemoved(true)}>
+						<TrashIcon width={20} height={20} />
+					</button>
+				</li>
+			</ul>
 		</div>
 	);
 };
@@ -197,15 +199,19 @@ const styles = {
 			flex: 1;
 
 			width: 20vw;
-			min-height: 15vh;
-			max-height: 30vh;
 			padding: 1rem;
-
-			overflow-y: scroll;
-			scrollbar-width: none;
 		}
 	`,
-	noteActive: css`
+	scroll: css`
+		${MEDIA_QUERY.desktopUp} {
+			overflow-y: scroll;
+			scrollbar-width: none;
+
+			min-height: 15vh;
+			max-height: 30vh;
+		}
+	`,
+	scrollActive: css`
 		${MEDIA_QUERY.desktopUp} {
 			max-height: 60vh;
 		}
@@ -215,7 +221,7 @@ const styles = {
 		line-height: 3rem;
 	`,
 	paragraphList: css`
-		min-height: 4rem;
+		min-height: 6rem;
 	`,
 	activeParagraphContainer: css`
 		position: relative;
@@ -244,20 +250,16 @@ const styles = {
 	actions: {
 		list: css`
 			position: absolute;
-			bottom: 6px;
+			bottom: 0px;
 			right: 0px;
 
 			display: flex;
 			justify-content: center;
 			align-items: center;
-
-			${MEDIA_QUERY.tabletUp} {
-				bottom: 10px;
-				right: 8px;
-			}
 		`,
 		removeNoteAction: css`
 			margin-left: auto;
+			padding: 5px;
 		`,
 	},
 };

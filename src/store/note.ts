@@ -4,9 +4,10 @@ import { useState, useCallback } from "react";
 import { createUpdateNote } from "../service/note";
 import { debounceAsync } from "../util/debounce";
 import { getCursor } from "../util/cursor";
+import { NoteProps } from "../ui/Note";
+import { UserDB } from "../service/user";
 
 import { ParagraphsState, useParagraphsStore } from "./paragraphs";
-import { NoteProps } from "../ui/Note";
 
 export type NoteData = {
 	id: number;
@@ -66,6 +67,7 @@ export function useNoteStore(
 		insertNewParagraphBelowFocus,
 		deleteParagraph,
 		wantsToTagUser,
+		stopWantingToTagUser,
 	} = useParagraphsStore({
 		initialData, //
 		activeParagraphRef,
@@ -130,7 +132,14 @@ export function useNoteStore(
 	 */
 	async function handleEventEnterPress() {
 		if (wantsToTagUser.wants) {
-			await acceptUserMentionSelection(wantsToTagUser.usersMatchingSearch[0]);
+			const user: UserDB | undefined = wantsToTagUser.usersMatchingSearch[0];
+
+			if (!user) {
+				stopWantingToTagUser();
+				return;
+			}
+
+			await acceptUserMentionSelection(user);
 		} else {
 			await insertNewParagraphBelowFocus();
 		}

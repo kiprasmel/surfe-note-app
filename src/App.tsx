@@ -5,9 +5,11 @@ import "./reset.css";
 
 import { Contexts } from "./ui/Contexts";
 import { NoteList } from "./ui/NoteList";
+import { useFetchNotes } from "./store/notes";
 
 function App() {
 	const [search, setSearch] = useState("");
+	const { notesData, setNotesData } = useFetchNotes();
 
 	return (
 		<Contexts>
@@ -25,7 +27,7 @@ function App() {
 					</ul>
 				</nav>
 
-				<NoteList search={search} />
+				<NoteList notesData={notesData} setNotesData={setNotesData} search={search} />
 			</div>
 		</Contexts>
 	);

@@ -1,11 +1,12 @@
 import { useState, useCallback } from "react";
 
 // eslint-disable-next-line import/no-cycle
-import { createUpdateNote } from "../service/note";
+import { NOTE_ID, createUpdateNote } from "../service/note";
 import { debounceAsync } from "../util/debounce";
 import { getCursor } from "../util/cursor";
 
 import { ParagraphsState, useParagraphsStore } from "./paragraphs";
+import { NoteProps } from "../ui/Note";
 
 export type NoteData = {
 	id: number;
@@ -13,7 +14,11 @@ export type NoteData = {
 	paragraphs: string[];
 };
 
-export function useNoteStore(initialData: NoteData, activeParagraphRef: React.RefObject<HTMLInputElement>) {
+export function useNoteStore(
+	initialData: NoteData,
+	setNotesData: NoteProps["setNotesData"],
+	activeParagraphRef: React.RefObject<HTMLInputElement>
+) {
 	const [id, setID] = useState(initialData.id);
 	const [title, setTitle] = useState(initialData.title || "");
 
@@ -32,8 +37,33 @@ export function useNoteStore(initialData: NoteData, activeParagraphRef: React.Re
 		updateNoteViaParagraphs,
 	});
 
+	/**
+	 * not ideal:
+	 * preferably we wouldn't derive our internal state from props (initial data),
+	 * and instead would manipulate the global `notesData` state.
+	 *
+	 * but:
+	 * 1. rewriting the whole `note` store to adjust to an array of notes,
+	 *    instead of a single note, would be very tedious right now.
+	 * 2. using the global notesData state for every update
+	 *    (e.g. on every new character in paragraph) could be very slow.
+	 *    at this point you'd utilize a state management library, e.g. redux,
+	 *    but alas, the task does not permit this. thus, WONTFIX.
+	 */
+	async function syncNoteUpdateWithAPIAndParentState(note: NoteData) {
+		setNotesData((xs) =>
+			xs.map((x) =>
+				x.id === note.id || (x.id === NOTE_ID.NEW && initialData.id === NOTE_ID.NEW) //
+					? note
+					: x
+			)
+		);
+
+		await _createUpdateNoteDebounced(note);
+	}
+
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	const createUpdateNoteDebounced = useCallback(
+	const _createUpdateNoteDebounced = useCallback(
 		debounceAsync(
 			(data: NoteData) =>
 				createUpdateNote(data).then((updated) => {
@@ -42,18 +72,18 @@ export function useNoteStore(initialData: NoteData, activeParagraphRef: React.Re
 						setID(updated.id);
 					}
 				}),
-			1000
+			300
 		),
 		[]
 	);
 
 	async function updateTitle(newTitle: string) {
 		setTitle(newTitle);
-		await createUpdateNoteDebounced({ id, title: newTitle, paragraphs: paragraphs.items });
+		await syncNoteUpdateWithAPIAndParentState({ id, title: newTitle, paragraphs: paragraphs.items });
 	}
 
 	async function updateNoteViaParagraphs(newParagraphs: ParagraphsState): Promise<void> {
-		await createUpdateNoteDebounced({ id, title, paragraphs: newParagraphs.items });
+		await syncNoteUpdateWithAPIAndParentState({ id, title, paragraphs: newParagraphs.items });
 	}
 
 	/**

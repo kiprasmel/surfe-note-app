@@ -7,12 +7,13 @@ import { userFullName } from "../store/user";
 
 export type NoteProps = {
 	initialData: NoteData;
+	setNotesData: React.Dispatch<React.SetStateAction<NoteData[]>>;
 	active: boolean;
 };
 
-export const Note: FC<NoteProps> = ({ initialData, active = false }) => {
+export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false }) => {
 	const activeParagraphRef = useRef<HTMLInputElement>(null);
-	const store = useNoteStore(initialData, activeParagraphRef);
+	const store = useNoteStore(initialData, setNotesData, activeParagraphRef);
 
 	async function handleKeyPress(e: React.KeyboardEvent): Promise<void> {
 		let prevent = true;

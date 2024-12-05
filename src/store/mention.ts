@@ -3,14 +3,16 @@ import { UserDB } from "../service/user";
 
 import { useUsersContext, userFullName } from "./user";
 
+export type WantsToTagUser = {
+	wants: boolean;
+	search: string;
+	usersMatchingSearch: UserDB[];
+};
+
 export function useMentionStore() {
 	const taggableUsers = useUsersContext();
 
-	const [wantsToTagUser, setWantsToTagUser] = useState<{
-		wants: boolean;
-		search: string;
-		usersMatchingSearch: UserDB[];
-	}>({
+	const [wantsToTagUser, setWantsToTagUser] = useState<WantsToTagUser>({
 		wants: false,
 		search: "",
 		usersMatchingSearch: [],

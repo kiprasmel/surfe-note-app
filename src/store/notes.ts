@@ -24,7 +24,9 @@ export function useActiveNote(search: string) {
 	const [activeNote, setActiveNote] = useState<string>(NOTE_ID.INACTIVE);
 
 	useEffect(() => {
-		setActiveNote(NOTE_ID.INACTIVE);
+		if (search) {
+			setActiveNote(NOTE_ID.INACTIVE);
+		}
 	}, [search]);
 
 	return [activeNote, setActiveNote] as const;

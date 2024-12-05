@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { getEmptyNote, fetchNotes, NOTE_ID } from "../service/note";
-import { NoteData } from "./note";
+
+import { fetchNotes } from "../service/note";
+
+import { NOTE_ID, NoteData, getNewNote } from "./note";
 
 export function useFetchNotes() {
-	const [notesData, setNotesData] = useState<NoteData[]>([getEmptyNote()]);
+	const [notesData, setNotesData] = useState<NoteData[]>([getNewNote()]);
 
 	useEffect(() => {
 		refetch();
@@ -11,7 +13,7 @@ export function useFetchNotes() {
 
 	async function refetch() {
 		return fetchNotes() //
-			.then((notes) => setNotesData([getEmptyNote(), ...notes]));
+			.then((notes) => setNotesData([getNewNote(), ...notes]));
 	}
 
 	return { notesData, setNotesData, refetch } as const;
@@ -19,7 +21,7 @@ export function useFetchNotes() {
 
 /** if search changes, no note should be selected as active */
 export function useActiveNote(search: string) {
-	const [activeNote, setActiveNote] = useState<number>(NOTE_ID.INACTIVE);
+	const [activeNote, setActiveNote] = useState<string>(NOTE_ID.INACTIVE);
 
 	useEffect(() => {
 		setActiveNote(NOTE_ID.INACTIVE);

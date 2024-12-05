@@ -14,10 +14,10 @@ export const Note: FC<NoteProps> = ({ initialData, active = false }) => {
 	const activeParagraphRef = useRef<HTMLInputElement>(null);
 	const store = useNoteStore(initialData, activeParagraphRef);
 
-	function handleKeyPress(e: React.KeyboardEvent): void {
+	async function handleKeyPress(e: React.KeyboardEvent): Promise<void> {
 		switch (e.key) {
 			case "Enter": {
-				store.handleEventEnterPress();
+				await store.handleEventEnterPress();
 				break;
 			}
 			case "ArrowUp": {
@@ -60,7 +60,7 @@ export const Note: FC<NoteProps> = ({ initialData, active = false }) => {
 						ref={activeParagraphRef}
 						placeholder="Title"
 						value={store.title}
-						onChange={(e) => store.editTitle(e.target.value)}
+						onChange={(e) => store.updateTitle(e.target.value)}
 					/>
 				) : (
 					<RenderMarkdown content={store.title || "Title"} />

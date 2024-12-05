@@ -38,9 +38,10 @@ export function useParagraphsStore({
 		return paragraphs.items[paragraphs.focusItemIndex];
 	}
 
-	function focusParagraph(index: number) {
+	function focusParagraph(index: number, newCursor: number | -1 = -1) {
 		stopWantingToTagUser();
 		dispatchParagraphs({ action: "focus", index });
+		_refocusCursor(newCursor);
 	}
 
 	async function editParagraph(e: React.ChangeEvent<HTMLInputElement>) {
@@ -61,6 +62,14 @@ export function useParagraphsStore({
 		const action: ParagraphsAction = { action: "edit_paragraph", newParagraph };
 		dispatchParagraphs(action);
 
+		_refocusCursor(newCursor);
+
+		// https://react.dev/reference/react/useReducer#ive-dispatched-an-action-but-logging-gives-me-the-old-state-value
+		const newParagraphs = paragraphsReducer(paragraphs, action);
+		await updateNoteViaParagraphs(newParagraphs);
+	}
+
+	function _refocusCursor(newCursor: number | -1) {
 		if (newCursor !== -1) {
 			setTimeout(() => {
 				/** re-focus if no longer selected (e.g. clicked item from list of users) */
@@ -72,10 +81,6 @@ export function useParagraphsStore({
 				activeParagraphRef.current?.setSelectionRange(newCursor, newCursor);
 			}, 1);
 		}
-
-		// https://react.dev/reference/react/useReducer#ive-dispatched-an-action-but-logging-gives-me-the-old-state-value
-		const newParagraphs = paragraphsReducer(paragraphs, action);
-		await updateNoteViaParagraphs(newParagraphs);
 	}
 
 	/**
@@ -110,6 +115,18 @@ export function useParagraphsStore({
 		await updateNoteViaParagraphs(newParagraphs);
 	}
 
+	async function deleteParagraph(index: number = paragraphs.focusItemIndex) {
+		await _deleteParagraphState(index);
+	}
+
+	async function _deleteParagraphState(index: number) {
+		const action: ParagraphsAction = { action: "delete_paragraph", index };
+		dispatchParagraphs(action);
+
+		const newParagraphs = paragraphsReducer(paragraphs, action);
+		await updateNoteViaParagraphs(newParagraphs);
+	}
+
 	return {
 		paragraphs,
 		getCurrentParagraph,
@@ -117,6 +134,7 @@ export function useParagraphsStore({
 		editParagraph,
 		acceptUserMentionSelection,
 		insertNewParagraphBelowFocus,
+		deleteParagraph,
 		wantsToTagUser,
 		startOrContinueWantingToTagUser,
 		stopWantingToTagUser,
@@ -153,6 +171,10 @@ type ParagraphsAction =
 			newParagraph: string;
 	  }
 	| {
+			action: "delete_paragraph";
+			index: number;
+	  }
+	| {
 			action: "focus";
 			index: number;
 	  };
@@ -181,6 +203,13 @@ function paragraphsReducer(state: ParagraphsState, action: ParagraphsAction): Pa
 			return {
 				...state,
 				items: state.items.map((x, i) => (i !== state.focusItemIndex ? x : action.newParagraph)),
+			};
+		}
+		case "delete_paragraph": {
+			return {
+				...state,
+				items: state.items.filter((_, i) => i !== action.index),
+				focusItemIndex: state.focusItemIndex - 1,
 			};
 		}
 		case "focus": {

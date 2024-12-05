@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 
 // eslint-disable-next-line import/no-cycle
-import { NOTE_ID, createUpdateNote } from "../service/note";
+import { createUpdateNote } from "../service/note";
 import { debounceAsync } from "../util/debounce";
 import { getCursor } from "../util/cursor";
 
@@ -10,16 +10,51 @@ import { NoteProps } from "../ui/Note";
 
 export type NoteData = {
 	id: number;
+
+	/**
+	 * client id. we will generate & use this ID in the client,
+	 * to avoid re-rendering, losing focus from new note & other issues.
+	 */
+	clientId: string;
+
 	title: string;
 	paragraphs: string[];
 };
+
+export const getNewNote = (): NoteData => ({
+	clientId: generateNewNoteId(),
+	id: NOTE_ID.NEW,
+	title: "",
+	paragraphs: ["", "", ""],
+});
+
+const generateNewNoteId = () => {
+	const rand = () => {
+		/** do not reduce length of the resulting number (if r < 0.1, then number will have fewer digits) */
+		let r;
+		do {
+			r = Math.random();
+		} while (r < 0.1);
+
+		return Math.floor(r * 1e10);
+	};
+
+	const id = [new Date().getTime(), rand(), rand(), rand()].join(":");
+	return id;
+};
+
+export const NOTE_ID = {
+	NEW: -1, // server
+	INACTIVE: "inactive", // client
+} as const;
 
 export function useNoteStore(
 	initialData: NoteData,
 	setNotesData: NoteProps["setNotesData"],
 	activeParagraphRef: React.RefObject<HTMLInputElement>
 ) {
-	const [id, setID] = useState(initialData.id);
+	const { clientId, id } = initialData;
+
 	const [title, setTitle] = useState(initialData.title || "");
 
 	const {
@@ -50,40 +85,43 @@ export function useNoteStore(
 	 *    at this point you'd utilize a state management library, e.g. redux,
 	 *    but alas, the task does not permit this. thus, WONTFIX.
 	 */
-	async function syncNoteUpdateWithAPIAndParentState(note: NoteData) {
-		setNotesData((xs) =>
-			xs.map((x) =>
-				x.id === note.id || (x.id === NOTE_ID.NEW && initialData.id === NOTE_ID.NEW) //
-					? note
-					: x
-			)
-		);
-
-		await _createUpdateNoteDebounced(note);
-	}
-
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	const _createUpdateNoteDebounced = useCallback(
-		debounceAsync(
-			(data: NoteData) =>
-				createUpdateNote(data).then((updated) => {
-					if (data.id !== updated.id) {
-						/** update to the server generated ID */
-						setID(updated.id);
-					}
-				}),
-			300
-		),
+	const syncNoteUpdateWithAPIAndParentState = useCallback(
+		debounceAsync(async (data: NoteData) => {
+			/**
+			 * after initial creation,
+			 * will have the proper `serverId` assigned.
+			 */
+			const newNote: NoteData = await createUpdateNote(data);
+
+			setNotesData((xs) =>
+				xs.map((x) =>
+					x.clientId === newNote.clientId //
+						? newNote
+						: x
+				)
+			);
+		}, 500),
 		[]
 	);
 
 	async function updateTitle(newTitle: string) {
 		setTitle(newTitle);
-		await syncNoteUpdateWithAPIAndParentState({ id, title: newTitle, paragraphs: paragraphs.items });
+		await syncNoteUpdateWithAPIAndParentState({
+			clientId,
+			id,
+			title: newTitle,
+			paragraphs: paragraphs.items,
+		});
 	}
 
 	async function updateNoteViaParagraphs(newParagraphs: ParagraphsState): Promise<void> {
-		await syncNoteUpdateWithAPIAndParentState({ id, title, paragraphs: newParagraphs.items });
+		await syncNoteUpdateWithAPIAndParentState({
+			clientId,
+			id,
+			title,
+			paragraphs: newParagraphs.items,
+		});
 	}
 
 	/**
@@ -140,7 +178,6 @@ export function useNoteStore(
 	}
 
 	return {
-		id,
 		title,
 		updateTitle,
 		paragraphs,

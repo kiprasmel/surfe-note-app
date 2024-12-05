@@ -20,13 +20,8 @@ export const NoteList: FC<NoteListProps> = ({ notesData, setNotesData, search = 
 		<div>
 			<ul id="note-list" className={styles.noteList}>
 				{searchedData.map((x) => (
-					<li
-						key={x.id}
-						onClick={() => {
-							setActiveNote(x.id);
-						}}
-					>
-						<Note initialData={x} setNotesData={setNotesData} active={activeNote === x.id} />
+					<li key={x.clientId} onClick={() => setActiveNote(x.clientId)}>
+						<Note initialData={x} setNotesData={setNotesData} active={activeNote === x.clientId} />
 					</li>
 				))}
 			</ul>

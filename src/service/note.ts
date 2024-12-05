@@ -1,17 +1,11 @@
 import { ACCOUNT } from "../store/account";
-import { NoteData } from "../store/note";
+import { NOTE_ID, NoteData } from "../store/note";
 
 export type NoteDBData = {
+	/** server ID */
 	id: number;
 	body: string;
 };
-
-export const NOTE_ID = {
-	NEW: -1,
-	INACTIVE: -2,
-} as const;
-
-export const getEmptyNote = (): NoteData => ({ id: NOTE_ID.NEW, title: "", paragraphs: ["", "", ""] });
 
 export async function fetchNotes(): Promise<NoteData[]> {
 	const res = await fetch(`https://challenge.surfe.com/${ACCOUNT.session}/notes`, {
@@ -33,7 +27,7 @@ export function decodeNotesDBData(data: NoteDBData[]): NoteData[] {
 }
 
 export function decodeNote(noteDb: NoteDBData): NoteData {
-	const decoded: Pick<NoteData, "title" | "paragraphs"> = JSON.parse(noteDb.body);
+	const decoded: Omit<NoteData, "id"> = JSON.parse(noteDb.body);
 
 	return {
 		...decoded,

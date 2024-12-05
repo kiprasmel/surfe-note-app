@@ -1,8 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, FC, ReactNode, useContext } from "react";
 
 import { UserDB, fetchUsers } from "../service/user";
 
-export function useFetchUsers() {
+const UsersContext = createContext<UserDB[]>([]);
+
+export const useUsersContext = () => useContext(UsersContext);
+
+export const UsersContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
+	const [users] = useFetchUsers();
+
+	return <UsersContext.Provider value={users}>{children}</UsersContext.Provider>;
+};
+
+function useFetchUsers() {
 	const [users, setUsers] = useState<UserDB[]>([]);
 
 	useEffect(() => {

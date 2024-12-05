@@ -3,28 +3,31 @@ import { css } from "emotion";
 
 import "./reset.css";
 
+import { Contexts } from "./ui/Contexts";
 import { NoteList } from "./ui/NoteList";
 
 function App() {
 	const [search, setSearch] = useState("");
 
 	return (
-		<div className={styles.app}>
-			<nav className={styles.nav.nav}>
-				<ul className={styles.nav.list}>
-					<li>
-						<input
-							placeholder="Search in notes.."
-							value={search}
-							onChange={(e) => setSearch(e.target.value)}
-						/>
-					</li>
-					<li className={styles.nav.userItem}>User</li>
-				</ul>
-			</nav>
+		<Contexts>
+			<div className={styles.app}>
+				<nav className={styles.nav.nav}>
+					<ul className={styles.nav.list}>
+						<li>
+							<input
+								placeholder="Search in notes.."
+								value={search}
+								onChange={(e) => setSearch(e.target.value)}
+							/>
+						</li>
+						<li className={styles.nav.userItem}>User</li>
+					</ul>
+				</nav>
 
-			<NoteList search={search} />
-		</div>
+				<NoteList search={search} />
+			</div>
+		</Contexts>
 	);
 }
 

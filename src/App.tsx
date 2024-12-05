@@ -6,10 +6,16 @@ import "./reset.css";
 import { Contexts } from "./ui/Contexts";
 import { NoteList } from "./ui/NoteList";
 import { useFetchNotes } from "./store/notes";
+import { getNewNote } from "./store/note";
 
 function App() {
 	const [search, setSearch] = useState("");
 	const { notesData, setNotesData } = useFetchNotes();
+
+	function handleCreateNewNote() {
+		setSearch("");
+		setNotesData((xs) => [getNewNote(), ...xs]);
+	}
 
 	return (
 		<Contexts>
@@ -28,6 +34,18 @@ function App() {
 				</nav>
 
 				<NoteList notesData={notesData} setNotesData={setNotesData} search={search} />
+
+				<div className={styles.newNote.container}>
+					<button
+						type="button"
+						aria-label="New note"
+						onClick={handleCreateNewNote}
+						className={styles.newNote.button}
+					>
+						<div className={styles.newNote.plusLine1} />
+						<div className={styles.newNote.plusLine2} />
+					</button>
+				</div>
 			</div>
 		</Contexts>
 	);
@@ -65,6 +83,46 @@ const styles = {
 		`,
 		userItem: css`
 			margin-left: auto;
+		`,
+	},
+	newNote: {
+		container: css`
+			position: fixed;
+			bottom: 1.5rem;
+			right: 1.5rem;
+			z-index: 10;
+		`,
+		button: css`
+			position: relative;
+
+			width: 4rem;
+			height: 4rem;
+
+			border: none;
+			background: linear-gradient(45deg, hsl(0, 100%, 70%), hsl(240, 100%, 70%));
+			border-radius: 100%;
+			color: #fff;
+			box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+
+			font-weight: 800;
+			font-size: 1rem;
+			line-height: 1rem;
+
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		`,
+		plusLine1: css`
+			width: 6px;
+			height: 60%;
+			background: #fff;
+			position: absolute;
+		`,
+		plusLine2: css`
+			width: 60%;
+			height: 6px;
+			background: #fff;
+			position: absolute;
 		`,
 	},
 };

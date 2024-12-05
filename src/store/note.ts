@@ -5,7 +5,12 @@ import { createUpdateNote } from "../service/note";
 import { debounceAsync } from "../util/debounce";
 import { assertNever } from "../util/assertNever";
 import { clamp } from "../util/clamp";
-import { useUsersContext } from "./user";
+import { getContentInsideRange, Range } from "../lib/markdown/range";
+import { UserDB } from "../service/user";
+import { getCursor } from "../util/cursor";
+
+import { userFullName } from "./user";
+import { getMentionAtCursor, insertMissingBracketsToMention, useMentionStore } from "./mention";
 
 export type NoteData = {
 	id: number;
@@ -13,12 +18,15 @@ export type NoteData = {
 	paragraphs: string[];
 };
 
-export function useNoteStore(initialData: NoteData) {
+export function useNoteStore(initialData: NoteData, activeParagraphRef: React.RefObject<HTMLInputElement>) {
 	const [id, setID] = useState(initialData.id);
 	const [title, setTitle] = useState(initialData.title || "");
 
-	const [wantsToTagUser, setWantsToTagUser] = useState<boolean>(false);
-	const taggableUsers = useUsersContext();
+	const {
+		wantsToTagUser, //
+		stopWantingToTagUser,
+		startOrContinueWantingToTagUser,
+	} = useMentionStore();
 
 	async function editTitle(newValue: string) {
 		setTitle(newValue);
@@ -51,84 +59,85 @@ export function useNoteStore(initialData: NoteData) {
 	);
 
 	function focusParagraph(index: number) {
-		setWantsToTagUser(false);
+		stopWantingToTagUser();
 		dispatchParagraphs({ action: "focus", index });
 	}
 
 	async function editParagraph(e: React.ChangeEvent<HTMLInputElement>) {
-		let newValue: string = e.target.value;
+		const { newValue, cursor, mention } = resolveNewParagraphValue(e.target, getCurrentParagraph());
 
-		const selectionStart: number = e.target.selectionStart!;
-		const selectionEnd: number = e.target.selectionEnd!;
-
-		if (selectionStart !== selectionEnd) {
-			const msg = `TODO implement selection >1 character`;
-			throw new Error(msg);
-		}
-
-		const cursor: number = selectionStart;
-
-		/**
-		 * TODO: what if is editing middle of paragraph?
-		 * should do delta from previous value (edit distance?) & see if added "@"
-		 */
-		const newLengthGreaterOrEqual: boolean = newValue.length >= getCurrentParagraph().length;
-		const wantsToTag: boolean = newLengthGreaterOrEqual && newValue[cursor - 1] === "@";
-
-		if (wantsToTag) {
+		if (mention) {
 			/**
-			 * mark position of current "@" in the paragraph,
-			 * so that can type in it regularly (will only go right i.e. won't modify index of "@"),
-			 * so that we can use the paragraph text regularly,
-			 * and it'll act as the search filter for the list of users too
-			 * (we'll simply extract the "@[foo]" -> "foo" and use it for search).
+			 * lowercase, because data from API is lowercase too;
+			 * we only capitalize via css.
 			 */
-			setWantsToTagUser(true);
+			const search = getContentInsideRange(newValue, mention).toLowerCase();
 
-			const hasBracketsAlready: boolean = newValue[cursor] === "[";
-
-			if (!hasBracketsAlready) {
-				/**
-				 * current:
-				 * `foo@`
-				 *
-				 * new:
-				 * `foo@[]`
-				 */
-				newValue = newValue
-					.slice(0, cursor) //
-					.concat("[]")
-					.concat(newValue.slice(cursor));
-
-				setTimeout(() => {
-					/**
-					 * current:
-					 * `foo @|` (cursor at |)
-					 *
-					 * new:
-					 * `foo @[]|` (cursor at |)
-					 *
-					 * thus, move cursor inside `[]`:
-					 * `foo @[|]`
-					 */
-					e.target.setSelectionRange(cursor + 1, cursor + 1);
-				}, 1);
-			}
+			startOrContinueWantingToTagUser(search);
 		} else {
-			setWantsToTagUser(false);
+			stopWantingToTagUser();
 		}
 
+		await editParagraphState(newValue, cursor);
+	}
+
+	async function editParagraphState(newValue: string, newCursorPos: number | -1) {
 		const action: ParagraphsAction = { action: "edit_paragraph", newValue };
 		dispatchParagraphs(action);
+
+		if (newCursorPos !== -1) {
+			setTimeout(() => {
+				activeParagraphRef.current?.setSelectionRange(newCursorPos, newCursorPos);
+			}, 1);
+		}
 
 		// https://react.dev/reference/react/useReducer#ive-dispatched-an-action-but-logging-gives-me-the-old-state-value
 		const newParagraphs = paragraphsReducer(paragraphs, action);
 		await createUpdateNoteDebounced({ id, title, paragraphs: newParagraphs.items });
 	}
 
-	async function newParagraphBelowFocus() {
-		setWantsToTagUser(false);
+	/**
+	 * TODO extract "handleEvent" function from Note.tsx, since will need to intercept up/down arrow keys
+	 * depending if currently wants to tag or not (if yes, should navigate selecting user from list)
+	 */
+	async function handleEventEnterPress() {
+		if (wantsToTagUser.wants) {
+			await acceptUserMentionSelection(wantsToTagUser.usersMatchingSearch[0]);
+		} else {
+			stopWantingToTagUser();
+			await newParagraphBelowFocusState();
+		}
+	}
 
+	/**
+	 * accept the selected mention from search:
+	 * - insert into the paragraph
+	 * - move cursor to new location (after inserted)
+	 * - clear search
+	 */
+	async function acceptUserMentionSelection(acceptedUser: UserDB) {
+		const acceptedFullName: string = userFullName(acceptedUser);
+
+		const cursor: number = getCursor(activeParagraphRef.current!);
+		const paragraph: string = getCurrentParagraph();
+
+		const mention: Range = getMentionAtCursor(paragraph, cursor)!;
+
+		const updatedParagraph: string = paragraph
+			.slice(0, mention.beginInside) //
+			.concat(acceptedFullName)
+			.concat(paragraph.slice(mention.endInside));
+
+		/** for updating cursor to new position */
+		const updatedMention: Range = getMentionAtCursor(updatedParagraph, cursor)!;
+		const updatedCursor: number = updatedMention.endOutside;
+
+		stopWantingToTagUser();
+
+		await editParagraphState(updatedParagraph, updatedCursor);
+	}
+
+	async function newParagraphBelowFocusState() {
 		const action: ParagraphsAction = { action: "new_paragraph_below_focus" };
 		dispatchParagraphs(action);
 
@@ -145,10 +154,10 @@ export function useNoteStore(initialData: NoteData) {
 		getCurrentParagraph,
 		focusParagraph,
 		editParagraph,
-		newParagraphBelowFocus,
+		acceptUserMentionSelection,
+		handleEventEnterPress,
 		createUpdateNoteDebounced,
 		wantsToTagUser,
-		taggableUsers,
 	};
 }
 
@@ -222,4 +231,24 @@ function paragraphsReducer(state: ParagraphsState, action: ParagraphsAction): Pa
 			assertNever(action);
 		}
 	}
+}
+
+export type GetNewParagraphWithCursorRet = {
+	newValue: string;
+	cursor: number;
+	mention: Range | null;
+};
+
+function resolveNewParagraphValue(
+	target: HTMLInputElement, //
+	currentParagraph: string
+): GetNewParagraphWithCursorRet {
+	let cursor: number = getCursor(target);
+	let newValue: string = target.value;
+
+	({ newValue, cursor } = insertMissingBracketsToMention(newValue, currentParagraph, cursor));
+
+	const mention: Range | null = getMentionAtCursor(newValue, cursor);
+
+	return { newValue, cursor, mention };
 }

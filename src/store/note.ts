@@ -5,8 +5,7 @@ import { createUpdateNote } from "../service/note";
 import { debounceAsync } from "../util/debounce";
 import { assertNever } from "../util/assertNever";
 import { clamp } from "../util/clamp";
-
-import { useFetchUsers } from "./user";
+import { useUsersContext } from "./user";
 
 export type NoteData = {
 	id: number;
@@ -19,7 +18,7 @@ export function useNoteStore(initialData: NoteData) {
 	const [title, setTitle] = useState(initialData.title || "");
 
 	const [wantsToTagUser, setWantsToTagUser] = useState<boolean>(false);
-	const [taggableUsers] = useFetchUsers(); // TODO CONTEXT - currently performs a request for every single note..
+	const taggableUsers = useUsersContext();
 
 	async function editTitle(newValue: string) {
 		setTitle(newValue);

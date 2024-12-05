@@ -63,6 +63,12 @@ export function useParagraphsStore({
 
 		if (newCursor !== -1) {
 			setTimeout(() => {
+				/** re-focus if no longer selected (e.g. clicked item from list of users) */
+				if (document.activeElement !== activeParagraphRef.current) {
+					activeParagraphRef.current?.focus();
+				}
+
+				/** set correct cursor position */
 				activeParagraphRef.current?.setSelectionRange(newCursor, newCursor);
 			}, 1);
 		}

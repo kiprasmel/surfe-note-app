@@ -27,6 +27,7 @@ export const NoteList: FC<NoteListProps> = ({ notesData, setNotesData, search = 
 								setNotesData={setNotesData}
 								active={activeNote === x.clientId}
 								isOnlyOne={i === 0 && notesData.length === 1}
+								nth={notesData.length - notesData.findIndex((y) => y.clientId === x.clientId)}
 							/>
 						</li>
 					))
@@ -41,6 +42,7 @@ export const NoteList: FC<NoteListProps> = ({ notesData, setNotesData, search = 
 							}}
 							setNotesData={() => void 0}
 							active={false}
+							nth={0}
 						/>
 					</div>
 				)}

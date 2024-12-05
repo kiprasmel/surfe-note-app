@@ -10,9 +10,10 @@ export type NoteProps = {
 	setNotesData: React.Dispatch<React.SetStateAction<NoteData[]>>;
 	active: boolean;
 	isOnlyOne?: boolean;
+	nth: number;
 };
 
-export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false, isOnlyOne = false }) => {
+export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false, isOnlyOne = false, nth }) => {
 	const activeParagraphRef = useRef<HTMLInputElement>(null);
 	const store = useNoteStore(initialData, setNotesData, activeParagraphRef);
 
@@ -55,8 +56,9 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false,
 	const shouldShowTitlePreview: boolean = isOnlyOne && !store.title;
 	const shouldShowParagraphPreview: boolean = isOnlyOne && store.paragraphs.items.every((x) => !x);
 
+	const titlePlaceholder = `Note #${nth}`;
 	function getTitleContent() {
-		return shouldShowTitlePreview ? "Your first note" : store.title || "Title";
+		return shouldShowTitlePreview ? "Your first note" : store.title || titlePlaceholder;
 	}
 	function getParagraphContent(paragraph: string, index: number) {
 		return shouldShowParagraphPreview && index === 0
@@ -85,7 +87,7 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false,
 				{active && store.paragraphs.focusItemIndex === PARAGRAPH_FOCUS_TITLE ? (
 					<input
 						ref={activeParagraphRef}
-						placeholder="Title"
+						placeholder={titlePlaceholder}
 						value={store.title}
 						onChange={(e) => store.updateTitle(e.target.value)}
 					/>

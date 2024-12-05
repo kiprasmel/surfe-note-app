@@ -3,6 +3,7 @@ import { useState, useCallback } from "react";
 // eslint-disable-next-line import/no-cycle
 import { createUpdateNote } from "../service/note";
 import { debounceAsync } from "../util/debounce";
+import { getCursor } from "../util/cursor";
 
 import { ParagraphsState, useParagraphsStore } from "./paragraphs";
 
@@ -23,6 +24,7 @@ export function useNoteStore(initialData: NoteData, activeParagraphRef: React.Re
 		editParagraph,
 		acceptUserMentionSelection,
 		insertNewParagraphBelowFocus,
+		deleteParagraph,
 		wantsToTagUser,
 	} = useParagraphsStore({
 		initialData, //
@@ -66,6 +68,47 @@ export function useNoteStore(initialData: NoteData, activeParagraphRef: React.Re
 		}
 	}
 
+	async function handleEventBackspaceDeletePress(e: React.KeyboardEvent) {
+		const isEmpty = !getCurrentParagraph();
+		const isTheOnlyOne = paragraphs.items.length === 1;
+
+		const shouldDelete = isEmpty && !isTheOnlyOne;
+
+		if (shouldDelete) {
+			e.preventDefault();
+			deleteParagraph();
+		}
+	}
+
+	function isAtBeginning(e: React.KeyboardEvent) {
+		return getCursor(e.target as HTMLInputElement) === 0;
+	}
+	function isAtEnd(e: React.KeyboardEvent) {
+		return getCursor(e.target as HTMLInputElement) === getCurrentParagraph().length;
+	}
+
+	function handleEventArrowLeftRightPress(e: React.KeyboardEvent) {
+		if (isAtBeginning(e) && e.key === "ArrowLeft") {
+			e.preventDefault();
+
+			const newParagraphIdx = paragraphs.focusItemIndex - 1;
+
+			if (newParagraphIdx >= 0) {
+				const ending = paragraphs.items[newParagraphIdx].length;
+				focusParagraph(newParagraphIdx, ending);
+			}
+		} else if (isAtEnd(e) && e.key === "ArrowRight") {
+			e.preventDefault();
+
+			const newParagraphIdx = paragraphs.focusItemIndex + 1;
+
+			if (newParagraphIdx < paragraphs.items.length) {
+				const beginning = 0;
+				focusParagraph(newParagraphIdx, beginning);
+			}
+		}
+	}
+
 	return {
 		id,
 		title,
@@ -76,6 +119,8 @@ export function useNoteStore(initialData: NoteData, activeParagraphRef: React.Re
 		editParagraph,
 		acceptUserMentionSelection,
 		handleEventEnterPress,
+		handleEventBackspaceDeletePress,
+		handleEventArrowLeftRightPress,
 		wantsToTagUser,
 	};
 }

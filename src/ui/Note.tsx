@@ -15,9 +15,17 @@ export const Note: FC<NoteProps> = ({ initialData, active = false }) => {
 	const store = useNoteStore(initialData, activeParagraphRef);
 
 	async function handleKeyPress(e: React.KeyboardEvent): Promise<void> {
+		let prevent = true;
+
 		switch (e.key) {
 			case "Enter": {
 				await store.handleEventEnterPress();
+				break;
+			}
+			case "Backspace":
+			case "Delete": {
+				prevent = false;
+				await store.handleEventBackspaceDeletePress(e);
 				break;
 			}
 			case "ArrowUp": {
@@ -28,13 +36,18 @@ export const Note: FC<NoteProps> = ({ initialData, active = false }) => {
 				store.focusParagraph(store.paragraphs.focusItemIndex + 1);
 				break;
 			}
+			case "ArrowLeft":
+			case "ArrowRight": {
+				prevent = false;
+				store.handleEventArrowLeftRightPress(e);
+				break;
+			}
 			default: {
-				// noop
-				return;
+				prevent = false;
 			}
 		}
 
-		e.preventDefault();
+		if (prevent) e.preventDefault();
 	}
 
 	/**

@@ -7,6 +7,7 @@ import { Contexts } from "./ui/Contexts";
 import { NoteList } from "./ui/NoteList";
 import { useFetchNotes } from "./store/notes";
 import { getNewNote } from "./store/note";
+import { MEDIA_QUERY } from "./util/mediaQuery";
 
 function App() {
 	const [search, setSearch] = useState("");
@@ -53,11 +54,23 @@ function App() {
 
 const styles = {
 	app: css`
-		margin: 0 0.5rem;
+		margin: 0 1rem 4rem 1rem;
+
+		${MEDIA_QUERY.desktopUp} {
+			margin: 1rem 4rem 8rem 4rem;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+		}
 	`,
 	nav: {
 		nav: css`
-			margin: 1rem 0 2rem 0;
+			margin: 2rem 0 2.5rem 0;
+
+			${MEDIA_QUERY.desktopUp} {
+				margin: 2rem 0 3rem 0;
+			}
 		`,
 		list: css`
 			display: flex;
@@ -91,6 +104,7 @@ const styles = {
 			bottom: 1.5rem;
 			right: 1.5rem;
 			z-index: 10;
+			user-select: none;
 		`,
 		button: css`
 			position: relative;
@@ -111,6 +125,8 @@ const styles = {
 			display: flex;
 			justify-content: center;
 			align-items: center;
+
+			cursor: pointer;
 		`,
 		plusLine1: css`
 			width: 6px;

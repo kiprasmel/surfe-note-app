@@ -1,9 +1,10 @@
 import { FC, useEffect, useRef } from "react";
-import { css } from "emotion";
+import { css, cx } from "emotion";
 
 import { RenderMarkdown } from "../lib/markdown/RenderMarkdown";
 import { NoteData, useNoteStore } from "../store/note";
 import { userFullName } from "../store/user";
+import { MEDIA_QUERY } from "../util/mediaQuery";
 
 export type NoteProps = {
 	initialData: NoteData;
@@ -82,7 +83,11 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false,
 	}, [active, store.paragraphs.focusItemIndex]);
 
 	return (
-		<div className={styles.note}>
+		<div
+			className={cx(styles.note, {
+				[styles.noteActive]: active,
+			})}
+		>
 			<h2 className={styles.title} onClick={() => store.focusParagraph(PARAGRAPH_FOCUS_TITLE)}>
 				{active && store.paragraphs.focusItemIndex === PARAGRAPH_FOCUS_TITLE ? (
 					<input
@@ -142,6 +147,23 @@ const styles = {
 		box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 8px;
 		line-height: 1.5rem;
 		padding: 0.5rem;
+
+		${MEDIA_QUERY.desktopUp} {
+			flex: 1;
+
+			width: 20vw;
+			min-height: 15vh;
+			max-height: 30vh;
+			padding: 1rem;
+
+			overflow-y: scroll;
+			scrollbar-width: none;
+		}
+	`,
+	noteActive: css`
+		${MEDIA_QUERY.desktopUp} {
+			max-height: 60vh;
+		}
 	`,
 	title: css`
 		font-size: 1.5rem;

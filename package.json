@@ -46,7 +46,8 @@
 			"camelcase": 0,
 			"import/no-import-module-exports": 0,
 			"@typescript-eslint/no-explicit-any": 0,
-			"no-void": 0
+			"no-void": 0,
+			"import/no-cycle": 1
 		}
 	},
 	"browserslist": {

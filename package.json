@@ -45,7 +45,8 @@
 			"jsx-a11y/click-events-have-key-events": 0,
 			"camelcase": 0,
 			"import/no-import-module-exports": 0,
-			"@typescript-eslint/no-explicit-any": 0
+			"@typescript-eslint/no-explicit-any": 0,
+			"no-void": 0
 		}
 	},
 	"browserslist": {

@@ -1,18 +1,19 @@
-import { FC, useEffect, useMemo, useState } from "react";
+import { FC, useMemo } from "react";
 import { css } from "emotion";
 
-import { NOTE_ID, fetchNotes, getEmptyNote } from "../service/note";
 import { NoteData } from "../store/note";
+import { searchNotes, useActiveNote } from "../store/notes";
 
-import { Note } from "./Note";
+import { Note, NoteProps } from "./Note";
 
 export type NoteListProps = {
+	notesData: NoteData[];
+	setNotesData: NoteProps["setNotesData"];
 	search?: string;
 };
 
-export const NoteList: FC<NoteListProps> = ({ search = "" }) => {
-	const [notesInitialData] = useFetchNotes();
-	const searchedData: NoteData[] = useMemo(() => searchNotes(notesInitialData, search), [notesInitialData, search]);
+export const NoteList: FC<NoteListProps> = ({ notesData, setNotesData, search = "" }) => {
+	const searchedData: NoteData[] = useMemo(() => searchNotes(notesData, search), [notesData, search]);
 	const [activeNote, setActiveNote] = useActiveNote(search);
 
 	return (
@@ -25,7 +26,7 @@ export const NoteList: FC<NoteListProps> = ({ search = "" }) => {
 							setActiveNote(x.id);
 						}}
 					>
-						<Note initialData={x} active={activeNote === x.id} />
+						<Note initialData={x} setNotesData={setNotesData} active={activeNote === x.id} />
 					</li>
 				))}
 			</ul>
@@ -43,35 +44,3 @@ const styles = {
 		}
 	`,
 };
-
-function useFetchNotes() {
-	const [notesInitialData, setNotesInitialData] = useState<NoteData[]>([getEmptyNote()]);
-
-	useEffect(() => {
-		fetchNotes() //
-			.then((notes) => setNotesInitialData([getEmptyNote(), ...notes]));
-	}, []);
-
-	return [notesInitialData, setNotesInitialData] as const;
-}
-
-/** if search changes, no note should be selected as active */
-function useActiveNote(search: string) {
-	const [activeNote, setActiveNote] = useState<number>(NOTE_ID.INACTIVE);
-
-	useEffect(() => {
-		setActiveNote(NOTE_ID.INACTIVE);
-	}, [search]);
-
-	return [activeNote, setActiveNote] as const;
-}
-
-function searchNotes(notesData: NoteData[], search: string): NoteData[] {
-	return !search
-		? notesData
-		: notesData.filter(
-				(note) =>
-					note.title.includes(search) || //
-					note.paragraphs.some((p) => p.includes(search))
-			);
-}

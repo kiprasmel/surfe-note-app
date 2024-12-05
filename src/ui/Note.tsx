@@ -5,6 +5,8 @@ import { RenderMarkdown } from "../lib/markdown/RenderMarkdown";
 import { NoteData, useNoteStore } from "../store/note";
 import { userFullName } from "../store/user";
 import { MEDIA_QUERY } from "../util/mediaQuery";
+import { UserDB } from "../service/user";
+import { WantsToTagUser } from "../store/mention";
 
 export type NoteProps = {
 	initialData: NoteData;
@@ -117,7 +119,7 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false,
 									{!store.wantsToTagUser.wants ? null : (
 										<div className={styles.userList.container}>
 											<ul className={styles.userList.list}>
-												{store.wantsToTagUser.usersMatchingSearch.map((x) => (
+												{limitTaggableUsers(store.wantsToTagUser).map((x) => (
 													<li
 														key={x.username}
 														onClick={() => store.acceptUserMentionSelection(x)}
@@ -200,3 +202,10 @@ const styles = {
 };
 
 const PARAGRAPH_FOCUS_TITLE = -1;
+
+const TAGGABLE_USER_SEARCH_LIMIT = 5;
+function limitTaggableUsers(wantsToTagUser: WantsToTagUser): UserDB[] {
+	return !wantsToTagUser.search
+		? wantsToTagUser.usersMatchingSearch
+		: wantsToTagUser.usersMatchingSearch.slice(0, TAGGABLE_USER_SEARCH_LIMIT);
+}

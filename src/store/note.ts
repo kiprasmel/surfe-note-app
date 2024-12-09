@@ -161,7 +161,9 @@ export function useNoteStore(
 	 * TODO extract "handleEvent" function from Note.tsx, since will need to intercept up/down arrow keys
 	 * depending if currently wants to tag or not (if yes, should navigate selecting user from list)
 	 */
-	async function handleEventEnterPress() {
+	async function handleEventEnterPress(e: React.KeyboardEvent) {
+		e.preventDefault();
+
 		if (wantsToTagUser.wants) {
 			const user: UserDB | null = getSelectedUser();
 
@@ -218,6 +220,8 @@ export function useNoteStore(
 	}
 
 	function handleEventArrowUpDownPress(e: React.KeyboardEvent, taggableUserLimit: number) {
+		e.preventDefault();
+
 		const delta = e.key === "ArrowUp" ? -1 : 1;
 
 		if (wantsToTagUser.wants) {

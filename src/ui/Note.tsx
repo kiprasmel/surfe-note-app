@@ -21,16 +21,13 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false,
 	const store = useNoteStore(initialData, setNotesData, activeParagraphRef);
 
 	async function handleKeyPress(e: React.KeyboardEvent): Promise<void> {
-		let prevent = true;
-
 		switch (e.key) {
 			case "Enter": {
-				await store.handleEventEnterPress();
+				await store.handleEventEnterPress(e);
 				break;
 			}
 			case "Backspace":
 			case "Delete": {
-				prevent = false;
 				await store.handleEventBackspaceDeletePress(e);
 				break;
 			}
@@ -41,16 +38,13 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false,
 			}
 			case "ArrowLeft":
 			case "ArrowRight": {
-				prevent = false;
 				store.handleEventArrowLeftRightPress(e);
 				break;
 			}
 			default: {
-				prevent = false;
+				// noop
 			}
 		}
-
-		if (prevent) e.preventDefault();
 	}
 
 	const shouldShowTitlePreview: boolean = isOnlyOne && !store.title;

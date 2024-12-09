@@ -26,6 +26,8 @@ export function useParagraphsStore({
 		wantsToTagUser, //
 		stopWantingToTagUser,
 		startOrContinueWantingToTagUser,
+		getSelectedUser,
+		setSelectedUserIndex,
 	} = useMentionStore();
 
 	const [paragraphs, dispatchParagraphs] = useReducer(
@@ -138,6 +140,8 @@ export function useParagraphsStore({
 		wantsToTagUser,
 		startOrContinueWantingToTagUser,
 		stopWantingToTagUser,
+		getSelectedUser,
+		setSelectedUserIndex,
 	};
 }
 

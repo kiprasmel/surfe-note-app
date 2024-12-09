@@ -5,9 +5,8 @@ import { RenderMarkdown } from "../lib/markdown/RenderMarkdown";
 import { NoteData, useNoteStore } from "../store/note";
 import { userFullName } from "../store/user";
 import { MEDIA_QUERY } from "../util/mediaQuery";
-import { UserDB } from "../service/user";
-import { WantsToTagUser } from "../store/mention";
 import { ReactComponent as TrashIcon } from "../icon/Trash.svg";
+import { getTaggableUserLimit, limitTaggableUsers } from "../store/mention";
 
 export type NoteProps = {
 	initialData: NoteData;
@@ -35,12 +34,9 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false,
 				await store.handleEventBackspaceDeletePress(e);
 				break;
 			}
-			case "ArrowUp": {
-				store.focusParagraph(store.paragraphs.focusItemIndex - 1);
-				break;
-			}
+			case "ArrowUp":
 			case "ArrowDown": {
-				store.focusParagraph(store.paragraphs.focusItemIndex + 1);
+				store.handleEventArrowUpDownPress(e, getTaggableUserLimit(store.wantsToTagUser));
 				break;
 			}
 			case "ArrowLeft":
@@ -138,11 +134,14 @@ export const Note: FC<NoteProps> = ({ initialData, setNotesData, active = false,
 											>
 												<ul className={styles.userList.list}>
 													{store.wantsToTagUser.usersMatchingSearch.length ? (
-														limitTaggableUsers(store.wantsToTagUser).map((x) => (
+														limitTaggableUsers(store.wantsToTagUser).map((x, i) => (
 															<li
 																key={x.username}
 																onClick={() => store.acceptUserMentionSelection(x)}
-																className={styles.userList.listItem}
+																className={cx(styles.userList.listItem, {
+																	[styles.userList.listItemSelected]:
+																		store.wantsToTagUser.selectedUserIndex === i,
+																})}
 															>
 																<span className={styles.userList.name}>
 																	{userFullName(x)}
@@ -243,6 +242,10 @@ const styles = {
 		`,
 		listItem: css`
 			padding: 0.25rem 0.75rem;
+			border: 1px solid transparent;
+		`,
+		listItemSelected: css`
+			border: 1px solid blue;
 		`,
 		name: css`
 			text-transform: capitalize;
@@ -266,10 +269,3 @@ const styles = {
 };
 
 const PARAGRAPH_FOCUS_TITLE = -1;
-
-const TAGGABLE_USER_SEARCH_LIMIT = 5;
-function limitTaggableUsers(wantsToTagUser: WantsToTagUser): UserDB[] {
-	return !wantsToTagUser.search
-		? wantsToTagUser.usersMatchingSearch
-		: wantsToTagUser.usersMatchingSearch.slice(0, TAGGABLE_USER_SEARCH_LIMIT);
-}

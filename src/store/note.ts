@@ -1,11 +1,11 @@
 import { useState, useCallback } from "react";
 
-// eslint-disable-next-line import/no-cycle
 import { createUpdateNote } from "../service/note";
 import { debounceAsync } from "../util/debounce";
 import { getCursor } from "../util/cursor";
 import { NoteProps } from "../ui/Note";
 import { UserDB } from "../service/user";
+import { clamp } from "../util/clamp";
 
 import { ParagraphsState, useParagraphsStore } from "./paragraphs";
 
@@ -71,6 +71,8 @@ export function useNoteStore(
 		deleteParagraph,
 		wantsToTagUser,
 		stopWantingToTagUser,
+		getSelectedUser,
+		setSelectedUserIndex,
 	} = useParagraphsStore({
 		initialData, //
 		activeParagraphRef,
@@ -161,7 +163,7 @@ export function useNoteStore(
 	 */
 	async function handleEventEnterPress() {
 		if (wantsToTagUser.wants) {
-			const user: UserDB | undefined = wantsToTagUser.usersMatchingSearch[0];
+			const user: UserDB | null = getSelectedUser();
 
 			if (!user) {
 				stopWantingToTagUser();
@@ -215,6 +217,19 @@ export function useNoteStore(
 		}
 	}
 
+	function handleEventArrowUpDownPress(e: React.KeyboardEvent, taggableUserLimit: number) {
+		const delta = e.key === "ArrowUp" ? -1 : 1;
+
+		if (wantsToTagUser.wants) {
+			setSelectedUserIndex((x) => {
+				const wanted = x + delta;
+				return clamp(wanted, 0, taggableUserLimit - 1);
+			});
+		} else {
+			focusParagraph(paragraphs.focusItemIndex + delta);
+		}
+	}
+
 	return {
 		title,
 		updateTitle,
@@ -227,6 +242,7 @@ export function useNoteStore(
 		handleEventEnterPress,
 		handleEventBackspaceDeletePress,
 		handleEventArrowLeftRightPress,
+		handleEventArrowUpDownPress,
 		wantsToTagUser,
 	};
 }

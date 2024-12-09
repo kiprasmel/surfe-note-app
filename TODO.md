@@ -1,6 +1,5 @@
 # TODO
 
-- [ ] eslint config new publish + install here once issues worked out (take from "rules" overrides)
 - [ ] sanitize parsed markdown before rendering
 - [ ] validate if markdown is valid, e.g. beginning bold without ending it
 - [x] do not take away focus from note's title, if initially clicking on it

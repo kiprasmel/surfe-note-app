@@ -4537,10 +4537,10 @@ eslint-config-airbnb@19.0.4:
     object.assign "^4.1.2"
     object.entries "^1.1.5"
 
-eslint-config-kiprasmel@0.4.1:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/eslint-config-kiprasmel/-/eslint-config-kiprasmel-0.4.1.tgz#a3cafec599b3ce258633c7cd31fd656a3dae0d68"
-  integrity sha512-a3ARXJgy5xydJHlkEpSAw2qvq8Eq/u44PHbzRhNAKBcVhKmWaXhVaiSxY55RCNeITIFf+9KQu/9QawR7GN9e7w==
+eslint-config-kiprasmel@0.4.2:
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/eslint-config-kiprasmel/-/eslint-config-kiprasmel-0.4.2.tgz#f2ac0efb545ca87c3df6840984bd4877fc033211"
+  integrity sha512-a3y8CUviOzLNt7gLvDoFPJzzH5TZ9lrFGcE23H0TH3qbWfGONZq1LFZL+xvAyaxOEKqKrPg4bE/VCjbWmPRqLA==
   dependencies:
     "@rushstack/eslint-patch" "1.10.4"
     "@typescript-eslint/eslint-plugin" "6.21.0"

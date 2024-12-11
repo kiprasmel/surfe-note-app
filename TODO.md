@@ -13,3 +13,6 @@
   - [ ] then, add more action buttons - bold/italic/mention
 - [ ] extend markdown parser - add links, note references
 - [ ] data encryption
+- [ ] error handling, e.g. server down
+- [ ] offline-first support - save to local storage to avoid data loss, sync later
+- [ ] related to previous 2 -- data synchronization difficulties, conflict resolution (event log with actions and timestamps? [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type)s?)
